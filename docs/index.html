@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Δ-flow Matching for Robot Foundation Models: start the flow from recent history with mild noise, learn only the residual change, and generate in one step.">
+<title>Δ-flow Matching</title>
+<link rel="icon" type="image/png" href="static/images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: warm paper ground, black ink, ONE centred column. Headings, text, figures, tables and cards all share the same left and right edge (--col). Type uses one scale (--fs-*); every component picks from it. */
+:root{
+  --bg:#f5f4ef;          /* paper */
+  --panel:#eef0e8;       /* soft sage panel */
+  --plate:#ffffff;       /* raised plates */
+  --line:#e5e4dc;        /* hairline */
+  --ink:#000000;
+  --ink-2:#222222;
+  --muted:#686868;
+  --faint:#a3a39c;
+  --delta:#e0473d;       /* Δ accent (demos) */
+  --delta-2:#f08a4b;
+  --f-sans:"Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --col:920px;           /* the one content width */
+  --gut:20px;
+  --fs-xs:.75rem;        /* 12  labels, notes */
+  --fs-sm:.875rem;       /* 14  captions, card text, tables */
+  --fs-md:1rem;          /* 16  body */
+  --fs-lg:1.125rem;      /* 18  card titles, tagline */
+  --fs-xl:1.5rem;        /* 24  inline numbers */
+  --fs-2xl:2rem;         /* 32  section titles, key numbers */
+  --fs-3xl:2.5rem;       /* 40  page title */
+  --r:12px;
+  --gap:16px;
+  --pad:20px;
+  color-scheme:light;
+}
+@media (max-width:640px){:root{--gut:16px;--pad:16px}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--fs-md)/1.6 var(--f-sans);-webkit-font-smoothing:antialiased}
+a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--faint);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
+h1,h2,h3{color:var(--ink);text-wrap:balance;margin:0}
+h2{font-size:clamp(1.625rem,4vw,var(--fs-2xl));font-weight:400;line-height:1.2;letter-spacing:-.025em}
+h3{font-size:var(--fs-lg);font-weight:600;line-height:1.35;letter-spacing:-.01em}
+p{margin:0;text-wrap:pretty}
+sub,sup{line-height:0}
+b{font-weight:600;color:var(--ink)}
+.mono{font-family:var(--f-mono)}
+.muted{color:var(--muted)}
+.eyebrow,.k{font:500 var(--fs-xs)/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* the column */
+.wrap{max-width:calc(var(--col) + 2 * var(--gut));margin-inline:auto;padding-inline:var(--gut)}
+section{scroll-margin-top:56px}
+section > .wrap{position:relative;display:flex;flex-direction:column;gap:28px;padding-block:72px}
+section > .wrap::before,footer > .wrap::before{content:"";position:absolute;top:0;left:var(--gut);right:var(--gut);border-top:1px solid var(--line)}
+@media (max-width:640px){section > .wrap{padding-block:52px;gap:24px}}
+.sec-head{display:flex;flex-direction:column;gap:12px}
+.sec-head .eyebrow{margin-bottom:-2px}
+.sec-head p,.body{color:var(--ink-2)}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:10;background:rgba(245,244,239,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:56px}
+.brand{display:block;line-height:0}
+.brand img{height:24px;width:auto}
+.topbar nav{display:flex;gap:24px;font-size:var(--fs-sm)}
+.topbar nav a{color:var(--muted);text-decoration:none}
+.topbar nav a:hover{color:var(--ink)}
+@media (max-width:420px){.topbar nav{gap:14px}}
+
+/* hero */
+.hero{padding-block:64px 72px;scroll-margin-top:56px}
+.hero-text{text-align:center}
+.hero h1{display:flex;flex-direction:column;align-items:center;gap:20px}
+.hero h1 img{display:block;height:76px;width:auto}
+.hero h1 span{font-size:clamp(1.75rem,4.6vw,var(--fs-3xl));font-weight:600;line-height:1.15;letter-spacing:-.03em}
+.tag{margin-top:14px;font-size:var(--fs-lg);color:var(--muted)}
+.tag em{font-style:normal;color:var(--ink);font-weight:600}
+.authors{margin:32px auto 0;max-width:760px;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;font-size:var(--fs-md);font-weight:500}
+.authors span,.authors a{color:var(--ink);white-space:nowrap;text-decoration:none}
+.authors a:hover{text-decoration:underline;text-decoration-color:var(--faint)}
+.authors sup{color:var(--muted);font-weight:400;font-size:.7em;margin-left:1px}
+.affil{margin-top:12px;font-size:var(--fs-sm);color:var(--muted)}
+.notes{margin-top:6px;font:var(--fs-xs)/1.5 var(--f-mono);color:var(--muted);display:flex;flex-wrap:wrap;justify-content:center;gap:2px 16px}
+.btns{margin-top:28px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;background:var(--ink);color:var(--bg);font:500 var(--fs-sm)/1 var(--f-sans);border:1px solid var(--ink);text-decoration:none;cursor:pointer}
+.btn svg{width:14px;height:14px;fill:currentColor}
+.btn:hover{background:var(--ink-2)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{background:var(--plate)}
+.btn.soon{background:transparent;color:var(--faint);border-color:var(--line);cursor:default}
+.btn.soon small{font:var(--fs-xs)/1 var(--f-mono)}
+.hero .teaser{margin-top:56px}
+
+/* figures: trimmed images run edge to edge of the column */
+.fig{margin:0;display:flex;flex-direction:column;gap:12px}
+.fig img{display:block;width:100%;height:auto;mix-blend-mode:multiply}
+.fig figcaption{font-size:var(--fs-sm);line-height:1.55;color:var(--muted)}
+
+/* key numbers */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:32px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+.stat{padding:var(--pad);display:flex;flex-direction:column;gap:8px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:0}
+.stat .n{font:600 var(--fs-2xl)/1 var(--f-sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.stat .n small{font-size:var(--fs-lg);font-weight:500;letter-spacing:0;color:var(--muted);margin-left:3px}
+.stat .l{font-size:var(--fs-sm);line-height:1.45;color:var(--muted)}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:nth-child(3){border-left:0}.stat:nth-child(n+3){border-top:1px solid var(--line)}}
+
+/* grids + boxes (one card anatomy everywhere) */
+.grid{display:grid;gap:var(--gap)}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.g3{grid-template-columns:1fr}}
+@media (max-width:600px){.g2{grid-template-columns:1fr}}
+@media (max-width:420px){.g4{grid-template-columns:1fr}}
+.box{border:1px solid var(--line);border-radius:var(--r);padding:var(--pad);background:var(--bg);display:flex;flex-direction:column;gap:10px;min-width:0}
+.box.plate{background:var(--plate)}
+.box.on{background:var(--plate);border-color:var(--ink)}
+.box p,.box li{font-size:var(--fs-sm);line-height:1.55}
+.box p{color:var(--muted)}
+.box li{color:var(--ink-2)}
+.box ul{margin:0;padding:0;list-style:none}
+.box li+li{margin-top:4px}
+.box li::before{content:"– ";color:var(--faint)}
+.box .fig{margin-block:4px}
+.find > p:last-child{margin-top:auto;padding-top:2px}
+.nw{white-space:nowrap}
+.chip{display:flex;gap:6px;flex-wrap:wrap}
+.chip span{font:500 var(--fs-xs)/1 var(--f-mono);padding:6px 10px;border-radius:999px;background:var(--ink);color:var(--bg)}
+.chip span.off{background:transparent;box-shadow:inset 0 0 0 1px var(--faint);color:var(--muted)}
+.big{font:600 var(--fs-xl)/1.1 var(--f-sans);letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.big small{font:400 var(--fs-sm) var(--f-sans);letter-spacing:0;color:var(--muted)}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--plate)}
+table{border-collapse:collapse;width:100%;font-size:var(--fs-sm);font-variant-numeric:tabular-nums;min-width:640px}
+th,td{padding:10px 14px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{padding-left:var(--pad)}
+th:last-child,td:last-child{padding-right:var(--pad)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+thead th{font:500 var(--fs-xs)/1.2 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-block:12px}
+tbody td{border-bottom:1px solid var(--line);color:var(--ink-2)}
+tbody tr:last-child td{border-bottom:0}
+tr.grp td{background:var(--panel);color:var(--ink);font:500 var(--fs-xs)/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;text-align:left}
+tr.ours td{background:#f8f8f3}
+tr.ours td:nth-child(2){font-weight:600;color:var(--ink)}
+td b{color:var(--ink);font-weight:700}
+
+/* bar rows */
+.bars{display:flex;flex-direction:column;gap:8px;font-size:var(--fs-sm)}
+.bar{display:grid;grid-template-columns:150px 1fr 52px;gap:12px;align-items:center}
+.bar i{display:block;height:8px;border-radius:4px;background:#d6d4ca}
+.bar.on i{background:var(--ink)}
+.bar span:first-child{color:var(--muted)}
+.bar span:last-child{text-align:right;font:500 var(--fs-sm) var(--f-mono)}
+.bars::after{content:"Bars start at 70%";font:var(--fs-xs) var(--f-mono);color:var(--faint)}
+@media (max-width:420px){.bar{grid-template-columns:136px 1fr 48px;gap:8px}}
+
+/* interactive demos */
+.demo{gap:16px}
+.demo-head{display:flex;flex-direction:column;gap:6px}
+.demo-panels{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+@media (max-width:640px){.demo-panels{grid-template-columns:1fr}}
+.dpanel{margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);min-width:0}
+.dpanel.on{border-color:var(--ink)}
+.dpanel figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:var(--fs-sm)}
+.dpanel figcaption .mono{color:var(--muted);font-size:var(--fs-xs)}
+.dpanel canvas{display:block;width:100%;aspect-ratio:3/2}
+.demo-ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.demo-ctrl label{min-width:76px;font-size:var(--fs-sm)}
+.demo-ctrl input[type=range]{flex:1 1 220px;accent-color:var(--ink);min-width:0}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;align-self:flex-start;background:var(--bg)}
+.seg button{border:0;background:transparent;padding:8px 14px;border-radius:999px;font:500 var(--fs-sm)/1 var(--f-sans);color:var(--muted);cursor:pointer}
+.seg button[aria-checked=true]{background:var(--ink);color:var(--bg)}
+#cv-chunk{display:block;width:100%;height:300px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.chunk-read{display:flex;flex-wrap:wrap;align-items:center;gap:10px 32px}
+.chunk-read > div{display:flex;flex-direction:column;gap:4px}
+.chunk-read .v{font:500 var(--fs-md)/1.2 var(--f-mono);color:var(--ink)}
+.chunk-read .btn{margin-left:auto}
+.box .demo-note{font-size:var(--fs-xs);color:var(--muted)}
+
+/* training-free */
+.swap{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:12px}
+.swap .box{gap:4px;justify-content:center}
+.swap b{font-size:var(--fs-md)}
+.swap-src.old b{text-decoration:line-through;text-decoration-color:var(--delta);color:var(--muted);font-weight:500}
+.swap-model{background:var(--panel)}
+.swap-arrow{align-self:center;font-size:var(--fs-lg);color:var(--faint)}
+@media (max-width:760px){.swap{grid-template-columns:1fr}.swap-arrow{transform:rotate(90deg);justify-self:center;line-height:1}}
+.tf-n{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px;font-variant-numeric:tabular-nums}
+.tf-n .from{font-size:var(--fs-md);color:var(--faint);text-decoration:line-through}
+.tf-n .ar{color:var(--faint)}
+.tf-n .to{font-size:var(--fs-xl);font-weight:600;letter-spacing:-.025em;line-height:1.1}
+.tf-n small{font-size:var(--fs-sm);color:var(--muted)}
+details.more{border:1px solid var(--line);border-radius:var(--r);background:var(--plate)}
+details.more summary{cursor:pointer;padding:14px var(--pad);font:500 var(--fs-sm)/1.2 var(--f-sans);color:var(--ink-2)}
+details.more summary::marker{color:var(--faint)}
+details.more[open] summary{border-bottom:1px solid var(--line)}
+details.more .tbl{border:0;border-radius:0 0 var(--r) var(--r)}
+
+/* bibtex */
+.bib{position:relative}
+pre{margin:0;background:var(--plate);border:1px solid var(--line);border-radius:var(--r);padding:var(--pad);overflow-x:auto;font:400 var(--fs-sm)/1.65 var(--f-mono);color:var(--ink-2)}
+.copy{position:absolute;top:12px;right:12px;padding:7px 12px;font-size:var(--fs-xs)}
+
+/* on-page contents: a rail beside the column on wide screens, a popover behind a button elsewhere */
+.toc{position:fixed;z-index:9;font-size:var(--fs-sm)}
+.toc ul{list-style:none;margin:0;padding:0}
+.toc > ul{border-left:1px solid var(--line)}
+.toc .grp{display:block;padding:16px 0 4px 15px;font:500 var(--fs-xs)/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.toc a{display:block;margin-left:-1px;padding:5px 0 5px 14px;border-left:2px solid transparent;color:var(--muted);text-decoration:none;line-height:1.3;transition:color .15s,border-color .15s}
+.toc a:hover{color:var(--ink)}
+.toc a.on{color:var(--ink);border-left-color:var(--ink);font-weight:500}
+.toc a:focus-visible{outline-offset:-2px}
+.toc-btn{position:fixed;z-index:9;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font:500 var(--fs-sm)/1 var(--f-sans);cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.14);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s}
+.toc-btn.show{opacity:1;pointer-events:auto;transform:none}
+.toc-btn svg{width:14px;height:14px;fill:currentColor}
+@media (min-width:1352px){
+  .toc{top:104px;left:calc(50% + var(--col) / 2 + 32px);width:168px;max-height:calc(100vh - 128px);overflow-y:auto}
+  .toc-btn{display:none}
+}
+@media (max-width:1351px){
+  .toc{right:16px;bottom:calc(68px + env(safe-area-inset-bottom,0px));width:min(260px,calc(100vw - 32px));max-height:min(70vh,520px);overflow-y:auto;padding:12px 16px 14px;background:var(--plate);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 12px 32px rgba(0,0,0,.10);opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .18s,transform .18s,visibility 0s .18s}
+  .toc.open{opacity:1;visibility:visible;transform:none;transition:opacity .18s,transform .18s}
+}
+@media (prefers-reduced-motion:reduce){.toc,.toc a,.toc-btn{transition:none}}
+@media print{.toc,.toc-btn{display:none}}
+footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(--fs-xs)/1.6 var(--f-mono);color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap"><a class="brand" href="#" aria-label="Δ-flow, back to top"><img src="static/images/logo.png" alt="Δ-flow" width="513" height="147"></a><nav><a href="#insight">Method</a><a href="#training">Results</a><a href="#ablations">Analysis</a><a href="#bibtex">BibTeX</a></nav></div></div>
+
+<nav class="toc" id="toc" aria-label="On this page">
+  <ul>
+    <li><a href="#top">Overview</a></li>
+    <li><span class="grp">Method</span><ul>
+      <li><a href="#insight">Motivation</a></li>
+      <li><a href="#method">One recipe</a></li>
+    </ul></li>
+    <li><span class="grp">Results</span><ul>
+      <li><a href="#training">Faster training</a></li>
+      <li><a href="#generalization">Generalization</a></li>
+      <li><a href="#inference">One-step inference</a></li>
+      <li><a href="#training-free">No retraining</a></li>
+    </ul></li>
+    <li><span class="grp">Analysis</span><ul>
+      <li><a href="#ablations">Ablations</a></li>
+      <li><a href="#studies">Design lessons</a></li>
+    </ul></li>
+    <li><span class="grp">More</span><ul>
+      <li><a href="#a2a">Beyond A2A</a></li>
+      <li><a href="#bibtex">BibTeX</a></li>
+    </ul></li>
+  </ul>
+</nav>
+<button class="toc-btn" id="toc-btn" type="button" aria-controls="toc" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h3v3H3zm5 0h13v3H8zM3 10.5h3v3H3zm5 0h13v3H8zM3 16h3v3H3zm5 0h13v3H8z"/></svg>Contents</button>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-text">
+      <h1><img src="static/images/logo.png" alt="Δ-flow" width="513" height="147"><span>Flow Matching for Robot Foundation Models</span></h1>
+      <p class="tag">Learn the change from <em>history</em>, not from fixed Gaussian noise.</p>
+
+      <div class="authors">
+        <span>Kuangji Zuo<sup>*</sup></span>
+        <a href="https://morpheus-an.github.io/" target="_blank" rel="noopener">Tuo An<sup>*</sup></a>
+        <span>Xinying Guo</span>
+        <a href="https://reagan1311.github.io/" target="_blank" rel="noopener">Gen Li</a>
+        <span>Mengfei Zhao</span>
+        <span>Jiaqi Bai</span>
+        <span>Bofan Lyu</span>
+        <span>Zhuoyuan Yu</span>
+        <span>Jinghan Yang</span>
+        <span>Jiayi Li</span>
+        <a href="https://jiajindou.github.io/" target="_blank" rel="noopener">Jindou Jia<sup>†‡</sup></a>
+        <a href="https://marsyang.site/" target="_blank" rel="noopener">Jianfei Yang<sup>†</sup></a>
+      </div>
+      <p class="affil">MARS Lab, Nanyang Technological University</p>
+      <div class="notes"><span>* Equal contribution</span><span>‡ Project lead</span><span>† Corresponding authors</span></div>
+
+      <div class="btns">
+        <a class="btn soon" href="#" aria-disabled="true"><svg viewBox="0 0 24 24"><path d="M4 4h10l6 6v10H4zM13 5v6h6"/></svg>arXiv <small>soon</small></a>
+        <a class="btn soon" href="#" aria-disabled="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6zM14 3v5h5M8 13h8v2H8zm0 4h8v2H8z"/></svg>PDF <small>soon</small></a>
+        <a class="btn" href="https://github.com/zuo-kuangji/delta-flow" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>GitHub</a>
+        <a class="btn ghost" href="#bibtex"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-7-4-7 4z"/></svg>BibTeX</a>
+      </div>
+    </div>
+
+    <figure class="fig teaser">
+      <img src="static/images/teaser.jpg" alt="Overview: conventional flow matching starts vision and action generation from Gaussian noise and needs 10 or more steps; Δ-flow starts from history plus noise and needs one step. Panels show 3–5× faster convergence, 1.53–6.58× lower latency, and 48–67% smoother actions on ImageWAM, Fast-WAM and π0.5." width="2043" height="881">
+      <figcaption><b>Overview.</b> Δ-flow starts each source from recent history plus mild noise and learns only the change Δ.</figcaption>
+    </figure>
+
+    <div class="stats" role="list">
+      <div class="stat" role="listitem"><span class="n">3–5<small>×</small></span><span class="l">faster training convergence</span></div>
+      <div class="stat" role="listitem"><span class="n">1<small>step</small></span><span class="l">inference, up to 6.58× faster</span></div>
+      <div class="stat" role="listitem"><span class="n">88.9<small>%</small></span><span class="l">on LIBERO-Plus</span></div>
+      <div class="stat" role="listitem"><span class="n">4.5<small>×</small></span><span class="l">lower action jerk</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="insight">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Motivation</span>
+      <h2>Why Start from Gaussian Noise?</h2>
+      <p>Actions and scenes change continuously, and the robot already knows its recent past. Δ-flow starts the flow there, so the network only learns a <b>small change Δ</b>.</p>
+    </div>
+    <div class="grid g2">
+      <div class="box">
+        <span class="k">Gaussian source</span>
+        <h3>Noise → future</h3>
+        <ul><li>Starts far from the target</li><li>~10 steps; 1 step is jerky</li></ul>
+      </div>
+      <div class="box on">
+        <span class="k">Δ-flow</span>
+        <h3>History + noise → future</h3>
+        <ul><li>Starts next to the target</li><li>1 step, smooth across chunks</li></ul>
+      </div>
+    </div>
+    <div class="box plate demo" id="tau-demo">
+      <div class="demo-head">
+        <span class="k">Interactive</span>
+        <h3>Drag τ from noise (1) to action (0)</h3>
+        <p>Grey: executed history. Dashed: the next action chunk.</p>
+      </div>
+      <div class="demo-panels">
+        <figure class="dpanel">
+          <figcaption><b>Gaussian source</b><span class="mono" id="d-g">—</span></figcaption>
+          <canvas id="cv-gauss" aria-label="A cloud of Gaussian noise collapses onto the target action chunk"></canvas>
+        </figure>
+        <figure class="dpanel on">
+          <figcaption><b>Δ-flow source</b><span class="mono" id="d-d">—</span></figcaption>
+          <canvas id="cv-delta" aria-label="The noisy history band moves a short distance onto the target action chunk"></canvas>
+        </figure>
+      </div>
+      <div class="demo-ctrl">
+        <label for="tau" class="mono">τ = <span id="tau-val">1.00</span></label>
+        <input type="range" id="tau" min="0" max="1" step="0.001" value="1">
+        <button type="button" class="btn" id="tau-play">Play</button>
+        <button type="button" class="btn ghost" id="tau-new">New noise</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="method">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Method</span>
+      <h2>One Recipe, Three Backbones</h2>
+      <p>Only the source changes. No new modules, no extra data.</p>
+    </div>
+    <figure class="fig">
+      <img src="static/images/method.jpg" alt="Δ-flow for world-action models (left) and for vision-language-action models (right)." width="2063" height="742" loading="lazy">
+      <figcaption><b>Architecture.</b> Left: world-action models learn vision Δ and action Δ. Right: VLAs learn action Δ. One Euler step at inference.</figcaption>
+    </figure>
+    <div class="grid g3">
+      <div class="box"><span class="k">WAM · image</span><h3>ImageWAM</h3><div class="chip"><span>Vision Δ</span><span>Action Δ</span></div><p>FLUX.2-klein-4B + action DiT</p></div>
+      <div class="box"><span class="k">WAM · video</span><h3>Fast-WAM</h3><div class="chip"><span>Vision Δ</span><span>Action Δ</span></div><p>Wan2.2-TI2V-5B + action DiT</p></div>
+      <div class="box"><span class="k">VLA</span><h3>π<sub>0.5</sub></h3><div class="chip"><span class="off">Vision cond.</span><span>Action Δ</span></div><p>PaliGemma + Gemma action expert</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="training">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Ingredient 1</span>
+      <h2>3–5× Faster Training</h2>
+      <p>Δ-flow passes 95% on LIBERO by epoch 2. Gaussian-source baselines need epochs 4–8.</p>
+    </div>
+    <figure class="fig">
+      <img src="static/images/training_efficiency.jpg" alt="Success rate versus training epoch on LIBERO and LIBERO-Plus for ImageWAM, Fast-WAM and π0.5." width="1654" height="727" loading="lazy">
+      <figcaption><b>Training efficiency.</b> Top: LIBERO. Bottom: LIBERO-Plus. Labels show Δ-flow's gain at epochs 1–2.</figcaption>
+    </figure>
+    <figure class="fig">
+      <img src="static/images/pi05_lora.jpg" alt="π0.5 LoRA: one-step Δ-flow reaches 92.2% after one epoch versus 89.5% for the ten-step baseline after five." width="1466" height="526" loading="lazy">
+      <figcaption><b>π<sub>0.5</sub> with LoRA.</b> 1-step Δ-flow after 1 epoch (92.2%) beats the 10-step baseline after 5 (89.5%).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="generalization">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Ingredient 2</span>
+      <h2>Stronger Generalization</h2>
+      <p>Tested on LIBERO-Plus (7 perturbation types) with no extra tuning. ImageWAM: <b>83.26% → 88.90%</b>. Biggest gains: robot initialization (50.4 → 73.2) and object layout (79.9 → 87.7).</p>
+    </div>
+    <figure class="fig">
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Backbone</th><th>Method</th><th>Steps (V/A)</th><th>Spatial</th><th>Object</th><th>Goal</th><th>Long</th><th>Overall</th></tr></thead>
+          <tbody>
+            <tr class="grp"><td colspan="8">LIBERO</td></tr>
+            <tr><td>ImageWAM</td><td>Original</td><td>0/10</td><td>98.80</td><td>99.20</td><td><b>98.80</b></td><td><b>95.20</b></td><td><b>98.00</b></td></tr>
+            <tr class="ours"><td>ImageWAM</td><td>Δ-flow (ours)</td><td>1/1</td><td><b>99.20</b></td><td><b>99.60</b></td><td>98.40</td><td>94.00</td><td>97.80</td></tr>
+            <tr><td>Fast-WAM</td><td>Gaussian sparse-joint</td><td>1/1</td><td><b>98.40</b></td><td>99.40</td><td><b>98.60</b></td><td>93.40</td><td>97.45</td></tr>
+            <tr class="ours"><td>Fast-WAM</td><td>Δ-flow (ours)</td><td>1/1</td><td>98.00</td><td><b>100.00</b></td><td><b>98.60</b></td><td><b>95.40</b></td><td><b>98.00</b></td></tr>
+            <tr class="grp"><td colspan="8">LIBERO-Plus</td></tr>
+            <tr><td>ImageWAM</td><td>Original</td><td>0/10</td><td>86.49</td><td>88.29</td><td>76.11</td><td>82.14</td><td>83.26</td></tr>
+            <tr class="ours"><td>ImageWAM</td><td>Δ-flow (ours)</td><td>1/1</td><td><b>91.06</b></td><td><b>93.65</b></td><td><b>84.78</b></td><td><b>86.11</b></td><td><b>88.90</b></td></tr>
+            <tr><td>Fast-WAM</td><td>Gaussian sparse-joint</td><td>1/1</td><td>85.35</td><td>79.90</td><td><b>73.41</b></td><td>71.85</td><td>77.63</td></tr>
+            <tr class="ours"><td>Fast-WAM</td><td>Δ-flow (ours)</td><td>1/1</td><td><b>88.43</b></td><td><b>90.11</b></td><td>67.89</td><td><b>76.62</b></td><td><b>80.76</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Success rate (%).</b> Steps = visual / action updates per call.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="inference">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Ingredient 3</span>
+      <h2>One-Step, Smooth Inference</h2>
+      <p>One step on an A100. ImageWAM <b>248 → 115 ms</b>, Fast-WAM <b>873 → 133 ms</b> (6.58×).</p>
+    </div>
+    <figure class="fig">
+      <img src="static/images/latency.jpg" alt="Latency and success rate for ImageWAM, Fast-WAM and π0.5." width="1613" height="518" loading="lazy">
+      <figcaption><b>Latency and success.</b> Bars: latency. Lines: LIBERO (dashed) and LIBERO-Plus (solid) success.</figcaption>
+    </figure>
+    <p class="body">One-step Gaussian sampling makes actions jerky (4.6×). Δ-flow stays smooth: each chunk starts from where the robot is.</p>
+    <figure class="fig">
+      <img src="static/images/action_continuity.jpg" alt="Action change and jerk around chunk boundaries on ImageWAM." width="1466" height="565" loading="lazy">
+      <figcaption><b>Action smoothness.</b> Action change and jerk around chunk boundaries (ImageWAM, LIBERO-Long).</figcaption>
+    </figure>
+    <div class="box plate demo" id="chunk-demo">
+      <div class="demo-head">
+        <span class="k">Interactive · illustration</span>
+        <h3>What happens at chunk boundaries</h3>
+        <p>Top: executed actions. Bottom: jerk. Shaded: each new chunk.</p>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Sampler">
+        <button type="button" role="radio" aria-checked="false" data-m="g1">Gaussian · 1 step</button>
+        <button type="button" role="radio" aria-checked="false" data-m="g10">Gaussian · 10 steps</button>
+        <button type="button" role="radio" aria-checked="true" data-m="d1">Δ-flow · 1 step</button>
+      </div>
+      <canvas id="cv-chunk" aria-label="Executed action stream and jerk across action-chunk boundaries"></canvas>
+      <div class="chunk-read">
+        <div><span class="k">Mean jerk</span><span class="v" id="r-jerk">—</span></div>
+        <div><span class="k">Boundary jump</span><span class="v" id="r-jump">—</span></div>
+        <div><span class="k">vs 10-step Gaussian</span><span class="v" id="r-rel">—</span></div>
+        <button type="button" class="btn ghost" id="chunk-new">Resample</button>
+      </div>
+      <p class="demo-note">Illustration only. Measured results are in the figure above.</p>
+    </div>
+  </div>
+</section>
+
+<section id="training-free">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">No retraining</span>
+      <h2>Works on Already-Trained Policies</h2>
+      <p>Freeze a Gaussian-trained policy and only swap the source.</p>
+    </div>
+    <div class="swap" aria-label="Training-free source swap">
+      <div class="box swap-src old"><span class="k">source</span><b>Gaussian noise</b></div>
+      <div class="swap-arrow" aria-hidden="true">→</div>
+      <div class="box on swap-src"><span class="k">source</span><b>Past actions + noise</b></div>
+      <div class="swap-arrow" aria-hidden="true">→</div>
+      <div class="box swap-model"><span class="k">frozen policy</span><b>0 parameters updated</b></div>
+    </div>
+    <figure class="fig">
+      <div class="grid g4">
+        <div class="box plate"><span class="k">ImageWAM · action</span><div class="tf-n"><span class="from">97.50</span><span class="ar">→</span><span class="to">98.10</span><small>%</small></div></div>
+        <div class="box plate"><span class="k">Fast-WAM · action</span><div class="tf-n"><span class="from">95.55</span><span class="ar">→</span><span class="to">96.15</span><small>%</small></div></div>
+        <div class="box plate"><span class="k">ImageWAM · visual</span><div class="tf-n"><span class="from">97.60</span><span class="ar">→</span><span class="to">98.30</span><small>%</small></div></div>
+        <div class="box plate"><span class="k">ImageWAM · latency</span><div class="tf-n"><span class="from">255.7</span><span class="ar">→</span><span class="to">63.1</span><small>ms</small></div></div>
+      </div>
+      <figcaption><b>LIBERO success at 1 step.</b> Latency: 10-step Gaussian vs 1-step history. On LIBERO-Plus the change is small; full gains need training with Δ-flow.</figcaption>
+    </figure>
+    <details class="more"><summary>Full table</summary>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Backbone</th><th>Source</th><th>V/A</th><th>LIBERO</th><th>LIBERO-Plus</th><th>Latency (ms)</th></tr></thead>
+        <tbody>
+          <tr class="grp"><td colspan="6">Action source</td></tr>
+          <tr><td>ImageWAM</td><td>Gaussian</td><td>1/10</td><td>98.00</td><td><b>83.17</b></td><td>255.7</td></tr>
+          <tr><td>ImageWAM</td><td>Gaussian</td><td>1/1</td><td>97.50</td><td>82.42</td><td>63.6</td></tr>
+          <tr class="ours"><td>ImageWAM</td><td>Past action</td><td>1/1</td><td><b>98.10</b></td><td>82.52</td><td><b>63.1</b></td></tr>
+          <tr><td>Fast-WAM</td><td>Gaussian</td><td>10/10</td><td><b>96.60</b></td><td>67.83</td><td>355.2</td></tr>
+          <tr><td>Fast-WAM</td><td>Gaussian</td><td>1/1</td><td>95.55</td><td><b>68.28</b></td><td><b>90.3</b></td></tr>
+          <tr class="ours"><td>Fast-WAM</td><td>Past action</td><td>1/1</td><td>96.15</td><td>67.58</td><td>91.8</td></tr>
+          <tr class="grp"><td colspan="6">Visual source</td></tr>
+          <tr><td>ImageWAM</td><td>Gaussian</td><td>1/1</td><td>97.60</td><td>89.79</td><td>85.2</td></tr>
+          <tr class="ours"><td>ImageWAM</td><td>Past image</td><td>1/1</td><td><b>98.30</b></td><td><b>89.89</b></td><td><b>85.0</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    </details>
+  </div>
+</section>
+
+<section id="ablations">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Analysis</span>
+      <h2>Ablations</h2>
+      <p>Which parts of Δ-flow matter, measured on ImageWAM.</p>
+    </div>
+    <div class="grid g2">
+      <div class="box find">
+        <h3>Both flows help</h3>
+        <div class="bars" aria-label="LIBERO-Plus success on ImageWAM">
+          <div class="bar"><span>Original</span><i style="width:40.1%"></i><span>82.02</span></div>
+          <div class="bar on"><span>+ action Δ</span><i style="width:53.0%"></i><span>85.91</span></div>
+          <div class="bar on"><span>+ visual Δ</span><i style="width:60.5%"></i><span>88.15</span></div>
+        </div>
+        <p>LIBERO-Plus, ImageWAM.</p>
+      </div>
+      <div class="box find">
+        <h3>Endpoint loss matters under shift</h3>
+        <div class="bars" aria-label="LIBERO-Plus with and without endpoint consistency">
+          <div class="bar on"><span>Action Δ</span><i style="width:53.0%"></i><span>85.91</span></div>
+          <div class="bar"><span>w/o action EC</span><i style="width:46.0%"></i><span>83.81</span></div>
+          <div class="bar on"><span>Action + visual Δ</span><i style="width:60.5%"></i><span>88.15</span></div>
+          <div class="bar"><span>w/o visual EC</span><i style="width:47.9%"></i><span>84.36</span></div>
+        </div>
+        <p>LIBERO barely changes (≤ 0.3 pp).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="studies">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Analysis</span>
+      <h2>Design Lessons</h2>
+      <p>What else matters when putting Δ-flow into a foundation model.</p>
+    </div>
+    <div class="grid g2">
+      <div class="box find">
+        <h3>Predict fewer future frames</h3>
+        <span class="big">+5.19 <small>pp LIBERO-Plus</small></span>
+        <figure class="fig"><img src="static/images/fastwam_variants.jpg" alt="Fast-WAM variants on LIBERO and LIBERO-Plus." width="1460" height="520" loading="lazy"></figure>
+        <p>4 frames beat 8 over the same horizon (Fast-WAM).</p>
+      </div>
+      <div class="box find">
+        <h3>Stop action gradients into the world model</h3>
+        <span class="big">+4.56 <small>pp LIBERO-Plus</small></span>
+        <div class="bars" aria-label="Fast-WAM with and without stop-gradient">
+          <div class="bar"><span>LIBERO · shared</span><i style="width:93.8%"></i><span>98.15</span></div>
+          <div class="bar on"><span>LIBERO · stop-grad</span><i style="width:96.5%"></i><span>98.95</span></div>
+          <div class="bar"><span>Plus · shared</span><i style="width:27.0%"></i><span>78.09</span></div>
+          <div class="bar on"><span>Plus · stop-grad</span><i style="width:42.2%"></i><span>82.65</span></div>
+        </div>
+        <p>Share features, not gradients.</p>
+      </div>
+      <div class="box find">
+        <h3>Endpoint loss alone almost suffices</h3>
+        <span class="big">87.55 <small>vs 87.60</small></span>
+        <figure class="fig"><img src="static/images/action_objectives.jpg" alt="Action objectives in ImageWAM." width="1481" height="569" loading="lazy"></figure>
+        <p>Flow matching still speeds up early training.</p>
+      </div>
+      <div class="box find">
+        <h3>Use local delta actions</h3>
+        <span class="big">+27.2 <small>pp LIBERO-Plus</small></span>
+        <figure class="fig"><img src="static/images/action_representation.jpg" alt="Action representations on LIBERO and LIBERO-Plus." width="1480" height="557" loading="lazy"></figure>
+        <p>Same on LIBERO, very different under shift.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="a2a">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Related work</span>
+      <h2>Beyond A2A</h2>
+      <p>Δ-flow extends our <a href="https://jingliangli.com/A2A_Flow_Matching/" target="_blank" rel="noopener">A2A flow matching</a>.</p>
+    </div>
+    <div class="grid g4">
+      <div class="box"><h3>Action space</h3><p>No latent encoder needed</p></div>
+      <div class="box"><h3>Vision too</h3><p>Visual Δ inside one WAM</p></div>
+      <div class="box"><h3>Foundation scale</h3><p>VLAs and WAMs</p></div>
+      <div class="box"><h3>New studies</h3><p>Representation and coupling</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="bibtex">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Citation</span>
+      <h2>BibTeX</h2>
+    </div>
+    <div class="bib">
+      <button class="btn copy" id="copy-bib" type="button">Copy</button>
+<pre id="bib-text">@article{zuo2026deltaflow,
+  title   = {$\Delta$ Flow Matching for Robot Foundation Models},
+  author  = {Zuo, Kuangji and An, Tuo and Guo, Xinying and Li, Gen and
+             Zhao, Mengfei and Bai, Jiaqi and Lyu, Bofan and Yu, Zhuoyuan and
+             Yang, Jinghan and Li, Jiayi and Jia, Jindou and Yang, Jianfei},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">MARS Lab · Nanyang Technological University · Δ-flow Matching for Robot Foundation Models · 2026</div>
+</footer>
+
+<script>
+(function(){var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){return /Δ-flow/.test(n.nodeValue)&&!n.parentNode.closest('pre,script,style,.nw')?1:3;}}),ns=[];
+while(w.nextNode())ns.push(w.currentNode);
+ns.forEach(function(n){var f=document.createDocumentFragment();n.nodeValue.split(/(Δ-flow)/).forEach(function(t){if(t==='Δ-flow'){var s=document.createElement('span');s.className='nw';s.textContent=t;f.appendChild(s);}else if(t)f.appendChild(document.createTextNode(t));});n.parentNode.replaceChild(f,n);});})();
+</script>
+<script>
+document.querySelectorAll('.btn.soon').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); }); });
+document.getElementById('copy-bib').addEventListener('click', function(){
+  var btn=this, txt=document.getElementById('bib-text').textContent;
+  function done(){ btn.textContent='Copied'; setTimeout(function(){btn.textContent='Copy';},1600); }
+  function fallback(){ var r=document.createRange(); r.selectNodeContents(document.getElementById('bib-text')); var s=getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent='Press ⌘C'; }
+  try{ navigator.clipboard.writeText(txt).then(done, fallback); }catch(e){ fallback(); }
+});
+</script>
+<script>
+(function(){
+  var css=getComputedStyle(document.documentElement);
+  function tok(n,f){var v=css.getPropertyValue(n).trim();return v||f;}
+  var C={ink:tok('--ink','#000'),muted:tok('--muted','#686868'),faint:tok('--faint','#a3a39c'),line:tok('--line','#e5e4dc'),bg:tok('--bg','#f5f4ef'),panel:tok('--panel','#eef0e8'),delta:tok('--delta','#e0473d'),delta2:tok('--delta-2','#f08a4b')};
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function rng(seed){var s=seed>>>0||1;return function(){s^=s<<13;s>>>=0;s^=s>>17;s^=s<<5;s>>>=0;return s/4294967296;};}
+  function gauss(r){var u=r()||1e-9,v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185*v);}
+  function fit(cv){var dpr=Math.min(window.devicePixelRatio||1,2);var w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return null;if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}var c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return {c:c,w:w,h:h};}
+
+  /* ---------- Demo 1: flow time ---------- */
+  var cvG=document.getElementById('cv-gauss'),cvD=document.getElementById('cv-delta');
+  if(cvG&&cvD){
+    var H=16,K=28,tau=1,seed=7;
+    function g(t){return 0.52+0.13*Math.sin(0.05*t+0.9)+0.035*Math.sin(0.16*t+2.0);}
+    var hist=[],targ=[];
+    for(var i=0;i<H;i++){hist.push(g(i-H));targ.push(g(i));}
+    // particles in plot units: u = horizontal position across the panel (0..1), v = action value (0..1)
+    function U(i){return (i+H+0.5)/(2*H);}
+    var PG,PD;
+    function sample(){
+      var r=rng(seed*9973+1);PG=[];PD=[];
+      for(var k=0;k<K;k++)for(var i=0;i<H;i++){
+        PG.push({su:Math.min(.985,Math.max(.53,0.76+0.085*gauss(r))),sv:Math.min(.97,Math.max(.05,0.50+0.13*gauss(r))),tu:U(i),tv:targ[i]});
+        PD.push({su:U(i)+0.011*gauss(r),sv:hist[i]+0.024*gauss(r),tu:U(i),tv:targ[i]});
+      }
+      var dg=dist(PG),dd=dist(PD);
+      document.getElementById('d-g').textContent='distance '+dg.toFixed(2);
+      document.getElementById('d-d').textContent='distance '+dd.toFixed(2)+' · '+Math.round(dg/dd)+'× shorter';
+    }
+    function dist(P){var t=0;P.forEach(function(p){t+=Math.hypot(p.su-p.tu,p.sv-p.tv);});return t/P.length;}
+    function draw(cv,P,col,rad){
+      var f=fit(cv);if(!f)return;var c=f.c,w=f.w,h=f.h,pl=10,pr=10,pt=24,pb=22;
+      function X(u){return pl+u*(w-pl-pr);} function Y(v){return h-pb-v*(h-pt-pb);}
+      c.clearRect(0,0,w,h);
+      c.fillStyle=C.panel;c.fillRect(X(0.5),pt-10,X(1)-X(0.5),h-pt-pb+10);
+      c.strokeStyle=C.faint;c.setLineDash([3,4]);c.beginPath();c.moveTo(X(0.5),pt-10);c.lineTo(X(0.5),h-pb);c.stroke();c.setLineDash([]);
+      c.font='10.5px "Geist Mono", ui-monospace, monospace';c.fillStyle=C.muted;
+      c.fillText('history',X(0)+2,pt);c.fillText('next chunk',X(0.5)+5,pt);c.fillText('now',X(0.5)-11,h-6);
+      c.strokeStyle=C.faint;c.lineWidth=3;c.lineCap='round';c.beginPath();
+      for(var i=0;i<H;i++){var x=X(U(i-H)),y=Y(hist[i]);if(!i)c.moveTo(x,y);else c.lineTo(x,y);}c.stroke();
+      c.setLineDash([5,5]);c.strokeStyle=C.ink;c.lineWidth=1.4;c.beginPath();c.moveTo(X(U(-1)),Y(hist[H-1]));
+      for(var i=0;i<H;i++)c.lineTo(X(U(i)),Y(targ[i]));c.stroke();c.setLineDash([]);
+      c.fillStyle=col;c.globalAlpha=0.32;
+      for(var n=0;n<P.length;n++){var p=P[n];var u=(1-tau)*p.tu+tau*p.su,v=(1-tau)*p.tv+tau*p.sv;c.beginPath();c.arc(X(u),Y(v),rad,0,6.283);c.fill();}
+      c.globalAlpha=1;
+      if(tau<0.02){c.strokeStyle=col;c.lineWidth=2.2;c.beginPath();for(var i=0;i<H;i++){var x=X(U(i)),y=Y(targ[i]);if(!i)c.moveTo(x,y);else c.lineTo(x,y);}c.stroke();}
+    }
+    function render(){draw(cvG,PG,C.ink,1.9);draw(cvD,PD,C.delta,1.9);document.getElementById('tau-val').textContent=tau.toFixed(2);}
+    var slider=document.getElementById('tau'),anim=null;
+    slider.addEventListener('input',function(){if(anim){cancelAnimationFrame(anim);anim=null;}tau=+slider.value;render();});
+    function play(){
+      if(anim)cancelAnimationFrame(anim);
+      if(reduce){tau=tau>0.5?0:1;slider.value=tau;render();return;}
+      var from=tau>0.02?tau:1,t0=null,dur=1800*Math.max(from,.3);
+      if(from===1){tau=1;}
+      function step(ts){if(t0===null)t0=ts;var k=Math.min(1,(ts-t0)/dur);var e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;tau=from*(1-e);slider.value=tau;render();if(k<1)anim=requestAnimationFrame(step);else anim=null;}
+      anim=requestAnimationFrame(step);
+    }
+    document.getElementById('tau-play').addEventListener('click',play);
+    document.getElementById('tau-new').addEventListener('click',function(){seed++;tau=1;slider.value=1;sample();render();});
+    sample();render();
+    window.addEventListener('resize',render);
+    if(window.ResizeObserver)new ResizeObserver(render).observe(cvD);
+    if(window.IntersectionObserver&&!reduce){var io=new IntersectionObserver(function(es){if(es[0].isIntersecting){io.disconnect();setTimeout(play,350);}},{threshold:0.6});io.observe(cvD);}
+  }
+
+  /* ---------- Demo 2: chunk boundaries ---------- */
+  var cvC=document.getElementById('cv-chunk');
+  if(cvC){
+    var N=5,EX=12,CH=16,T=N*EX, mode='d1', cseed=3, data={};
+    function g(t){return 0.55*Math.sin(t*0.085+0.3)+0.25*Math.sin(t*0.19+1.1);}
+    var P={g1:{b:0.15,s:0.06,hf:0.026},g10:{b:0.03,s:0.015,hf:0.006},d1:{b:0.012,s:0.012,hf:0.006}};
+    function simulate(){
+      Object.keys(P).forEach(function(m){
+        var r=rng(cseed*131+m.length*17+(m==='g10'?5:0)),pr=P[m],a=[];
+        for(var k=0;k<N;k++){
+          var t0=k*EX,b=pr.b*gauss(r),sl=pr.s*gauss(r);
+          if(m==='d1'&&k>0){b=(a[t0-1]-g(t0-1))*0.85+pr.b*gauss(r);}   // continues from executed history
+          for(var j=0;j<EX;j++){var t=t0+j;a[t]=g(t)+b+sl*(j/CH)+pr.hf*gauss(r);}
+        }
+        var jerk=[],jsum=0,n=0,jumps=0;
+        for(var t=2;t<T;t++){var jv=Math.abs(a[t]-2*a[t-1]+a[t-2]);jerk[t]=jv;jsum+=jv;n++;}
+        for(var k=1;k<N;k++){var t=k*EX;jumps+=Math.abs(a[t]-a[t-1]);}
+        data[m]={a:a,jerk:jerk,mj:jsum/n,mjump:jumps/(N-1)};
+      });
+    }
+    function drawC(){
+      var f=fit(cvC);if(!f)return;var c=f.c,w=f.w,h=f.h,L=40,R=12,Tp=14,mid=h*0.62,B=22;
+      c.clearRect(0,0,w,h);
+      function X(t){return L+(t/(T-1))*(w-L-R);}
+      // chunk bands
+      for(var k=0;k<N;k++){if(k%2===1){c.fillStyle=C.panel;c.fillRect(X(k*EX)-((w-L-R)/(T-1))/2,Tp,(w-L-R)/(T-1)*EX,h-Tp-B);}}
+      c.strokeStyle=C.line;c.setLineDash([3,4]);for(var k=1;k<N;k++){var x=X(k*EX)-((w-L-R)/(T-1))/2;c.beginPath();c.moveTo(x,Tp);c.lineTo(x,h-B);c.stroke();}c.setLineDash([]);
+      // top: actions
+      var y0=Tp+6,y1=mid-14;function Y(v){return y1-((v+1.05)/2.1)*(y1-y0);}
+      c.font='10px "Geist Mono", ui-monospace, monospace';c.fillStyle=C.muted;c.fillText('action',4,y0+8);
+      c.strokeStyle=C.faint;c.lineWidth=1.2;c.setLineDash([4,4]);c.beginPath();for(var t=0;t<T;t++){var x=X(t),y=Y(g(t));if(!t)c.moveTo(x,y);else c.lineTo(x,y);}c.stroke();c.setLineDash([]);
+      var d=data[mode],col=mode==='d1'?C.delta:C.ink;
+      c.strokeStyle=col;c.lineWidth=2;c.beginPath();for(var t=0;t<T;t++){var x=X(t),y=Y(d.a[t]);if(!t)c.moveTo(x,y);else c.lineTo(x,y);}c.stroke();
+      c.fillStyle=col;for(var k=1;k<N;k++){var t=k*EX;c.beginPath();c.arc(X(t),Y(d.a[t]),3.2,0,6.283);c.fill();}
+      // bottom: jerk bars, shared scale across modes
+      var jmax=0;Object.keys(data).forEach(function(m){data[m].jerk.forEach(function(v){if(v>jmax)jmax=v;});});
+      var b0=h-B,b1=mid+4;c.fillStyle=C.muted;c.fillText('jerk',4,b1+8);
+      c.strokeStyle=C.line;c.beginPath();c.moveTo(L,b0);c.lineTo(w-R,b0);c.stroke();
+      var bw=Math.max(2,(w-L-R)/(T-1)*0.6);c.fillStyle=col;
+      for(var t=2;t<T;t++){var hh=(d.jerk[t]/jmax)*(b0-b1);c.fillRect(X(t)-bw/2,b0-hh,bw,hh);}
+      c.fillStyle=C.muted;for(var k=0;k<N;k++){c.fillText('chunk '+(k+1),X(k*EX)+2,h-6);}
+      document.getElementById('r-jerk').textContent=d.mj.toFixed(3);
+      document.getElementById('r-jump').textContent=d.mjump.toFixed(3);
+      document.getElementById('r-rel').textContent=(d.mj/data.g10.mj).toFixed(1)+'× jerk';
+    }
+    var segs=document.querySelectorAll('#chunk-demo .seg button');
+    segs.forEach(function(b){b.addEventListener('click',function(){mode=b.dataset.m;segs.forEach(function(o){o.setAttribute('aria-checked',o===b?'true':'false');});drawC();});});
+    document.getElementById('chunk-new').addEventListener('click',function(){cseed++;simulate();drawC();});
+    simulate();drawC();
+    window.addEventListener('resize',drawC);
+    if(window.ResizeObserver)new ResizeObserver(drawC).observe(cvC);
+  }
+})();
+</script>
+
+<script>
+/* contents: highlight the section being read; popover open/close below 1352px */
+(function(){
+  var toc=document.getElementById('toc'),btn=document.getElementById('toc-btn');if(!toc)return;
+  var links=[].slice.call(toc.querySelectorAll('a[href^="#"]'));
+  var targets=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));});
+  var cur=-1,ticking=false,pinned=-1,pinnedAt=0;
+  function spy(){
+    ticking=false;
+    var H=window.innerHeight,line=Math.min(H*0.3,260),left=document.documentElement.scrollHeight-(window.scrollY+H);
+    if(left<H*0.5)line+= (H-line)*(1-Math.max(left,0)/(H*0.5));   // near the end, sweep the line down so short last sections still light up
+    var i=0;for(var k=0;k<targets.length;k++){if(targets[k]&&targets[k].getBoundingClientRect().top<=line)i=k;}
+    if(pinned>=0){var pt=targets[pinned].getBoundingClientRect().top;if(Date.now()-pinnedAt<1500||(pt>-40&&pt<H*0.6))i=pinned;else pinned=-1;}   // a clicked entry stays lit even when the page cannot scroll it to the top
+    if(i!==cur){cur=i;links.forEach(function(a,k){a.classList.toggle('on',k===i);if(k===i)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');});}
+    if(btn)btn.classList.toggle('show',window.scrollY>320||toc.classList.contains('open'));
+  }
+  function req(){if(!ticking){ticking=true;requestAnimationFrame(spy);}}
+  window.addEventListener('scroll',req,{passive:true});window.addEventListener('resize',req);
+  ['wheel','touchstart','keydown'].forEach(function(t){window.addEventListener(t,function(){pinned=-1;},{passive:true});});
+  function setOpen(o){toc.classList.toggle('open',o);if(btn)btn.setAttribute('aria-expanded',o?'true':'false');}
+  if(btn)btn.addEventListener('click',function(e){e.stopPropagation();setOpen(!toc.classList.contains('open'));});
+  links.forEach(function(a,k){a.addEventListener('click',function(){pinned=k;pinnedAt=Date.now();setOpen(false);req();});});
+  document.addEventListener('click',function(e){if(toc.classList.contains('open')&&!toc.contains(e.target))setOpen(false);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&toc.classList.contains('open')){setOpen(false);if(btn)btn.focus();}});
+  spy();
+})();
+</script>
+</body>
+</html>
