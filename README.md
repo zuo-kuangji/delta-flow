@@ -2,7 +2,7 @@
 
 Learn the change from history, not from fixed Gaussian noise.
 
-[Project website](https://zuo-kuangji.github.io/delta-flow/) · [Citation](#citation)
+[Project website](https://zuo-kuangji.github.io/delta-flow/) · [Official code repository](https://github.com/NTUMARS/delta-flow-matching) · [Citation](#citation)
 
 ![Δ-flow overview](docs/static/images/teaser.jpg)
 
@@ -35,7 +35,7 @@ GitHub Pages publishes `main` → `/docs`. Updates to files in `docs/` are deplo
 The citation will be updated when the paper is published.
 
 ```bibtex
-@article{zuo2026deltaflow,
+@article{deltaflow,
   title   = {$\Delta$ Flow Matching for Robot Foundation Models},
   author  = {Zuo, Kuangji and An, Tuo and Guo, Xinying and Li, Gen and
              Zhao, Mengfei and Bai, Jiaqi and Lyu, Bofan and Yu, Zhuoyuan and

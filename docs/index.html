@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Δ-flow Matching for Robot Foundation Models: start the flow from recent history with mild noise, learn only the residual change, and generate in one step.">
-<title>Δ-flow Matching</title>
-<link rel="icon" type="image/png" href="static/images/favicon.png?v=2">
+<meta name="description" content="Δ Flow Matching for Robot Foundation Models: start the flow from recent history with mild noise, learn only the residual change, and generate in one step.">
+<title>Δ Flow Matching</title>
+<link rel="icon" type="image/png" href="static/images/favicon.png?v=20261010-3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -80,8 +80,11 @@ section > .wrap::before,footer > .wrap::before{content:"";position:absolute;top:
 .hero{padding-block:64px 72px;scroll-margin-top:56px}
 .hero-text{text-align:center}
 .hero h1{display:flex;flex-direction:column;align-items:center;gap:20px}
-.hero h1 img{display:block;height:76px;width:auto}
-.hero h1 span{font-size:clamp(1.75rem,4.6vw,var(--fs-3xl));font-weight:600;line-height:1.15;letter-spacing:-.03em}
+.hero h1 > img{display:block;height:76px;width:auto}
+.hero h1 > span{font-size:clamp(1.75rem,4.6vw,var(--fs-3xl));font-weight:600;line-height:1.15;letter-spacing:-.03em}
+.dmark{display:inline-block;white-space:nowrap}
+.dmark img{display:inline-block;height:.86em;width:auto;vertical-align:-.07em}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .tag{margin-top:14px;font-size:var(--fs-lg);color:var(--muted)}
 .tag em{font-style:normal;color:var(--ink);font-weight:600}
 .authors{margin:32px auto 0;max-width:760px;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;font-size:var(--fs-md);font-weight:500}
@@ -155,6 +158,16 @@ tr.grp td{background:var(--panel);color:var(--ink);font:500 var(--fs-xs)/1 var(-
 tr.ours td{background:#f8f8f3}
 tr.ours td:nth-child(2){font-weight:600;color:var(--ink)}
 td b{color:var(--ink);font-weight:700}
+table.res th:nth-child(2),table.res td:nth-child(2){text-align:center}
+table.res tr.ours td:first-child{font-weight:600;color:var(--ink)}
+table.res tr.ours td:nth-child(2){font-weight:400;color:var(--ink-2)}
+table.res-tf th:nth-child(2),table.res-tf td:nth-child(2){text-align:left}
+table.res-tf tr.ours td:first-child{font-weight:400;color:var(--ink-2)}
+table.res-tf tr.ours td:nth-child(2){font-weight:600;color:var(--ink)}
+table.res-plus{min-width:780px}
+.fig > .k{margin-bottom:-4px}
+.fig > .tbl-k2{margin-top:12px}
+.tbl-note{padding:12px var(--pad);border-top:1px solid var(--line);font-size:var(--fs-xs);color:var(--muted)}
 
 /* bar rows */
 .bars{display:flex;flex-direction:column;gap:8px;font-size:var(--fs-sm)}
@@ -208,6 +221,20 @@ details.more summary::marker{color:var(--faint)}
 details.more[open] summary{border-bottom:1px solid var(--line)}
 details.more .tbl{border:0;border-radius:0 0 var(--r) var(--r)}
 
+/* design lessons: one full-width paper figure each, so every 6.5-inch paper figure renders at the same scale */
+.lessons{display:flex;flex-direction:column;gap:56px}
+.lesson{display:flex;flex-direction:column;gap:20px}
+.lesson-head{display:flex;justify-content:space-between;align-items:flex-end;gap:32px}
+.lesson-text{display:flex;flex-direction:column;gap:8px;min-width:0;max-width:640px}
+.lesson-text p{color:var(--ink-2)}
+.lesson-num{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
+.lesson-num small{font-size:var(--fs-sm);color:var(--muted)}
+@media (max-width:640px){.lessons{gap:44px}.lesson-head{flex-direction:column;align-items:flex-start;gap:12px}.lesson-num{flex-direction:row;align-items:baseline;gap:8px;text-align:left}}
+table.res{table-layout:fixed}
+table.res th:first-child{width:220px}
+table.res th:nth-child(2){width:84px}
+table.res-plus th:nth-child(7){width:100px}
+table.res thead th{letter-spacing:.04em}
 /* bibtex */
 .bib{position:relative}
 pre{margin:0;background:var(--plate);border:1px solid var(--line);border-radius:var(--r);padding:var(--pad);overflow-x:auto;font:400 var(--fs-sm)/1.65 var(--f-mono);color:var(--ink-2)}
@@ -240,7 +267,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
 </head>
 <body>
 
-<div class="topbar"><div class="wrap"><a class="brand" href="#" aria-label="Δ-flow, back to top"><img src="static/images/logo.png?v=2" alt="Δ-flow" width="513" height="147"></a><nav><a href="#insight">Method</a><a href="#training">Results</a><a href="#ablations">Analysis</a><a href="#bibtex">BibTeX</a></nav></div></div>
+<div class="topbar"><div class="wrap"><a class="brand" href="#" aria-label="Δ-flow, back to top"><img src="static/images/logo.png?v=20261010-3" alt="Δ-flow" width="513" height="147"></a><nav><a href="#insight">Method</a><a href="#training">Results</a><a href="#ablations">Analysis</a><a href="#bibtex">BibTeX</a></nav></div></div>
 
 <nav class="toc" id="toc" aria-label="On this page">
   <ul>
@@ -270,7 +297,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
 <header class="hero" id="top">
   <div class="wrap">
     <div class="hero-text">
-      <h1><img src="static/images/logo.png?v=2" alt="Δ-flow" width="513" height="147"><span>Flow Matching for Robot Foundation Models</span></h1>
+      <h1><img src="static/images/logo.png?v=20261010-3" alt="Δ-flow" width="513" height="147"><span><span class="dmark"><img src="static/images/delta_mark.png?v=20261010-3" alt="" aria-hidden="true" width="173" height="147"><span class="sr">Δ</span></span>&nbsp;Flow Matching for Robot Foundation Models</span></h1>
       <p class="tag">Learn the change from <em>history</em>, not from fixed Gaussian noise.</p>
 
       <div class="authors">
@@ -293,21 +320,21 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       <div class="btns">
         <a class="btn soon" href="#" aria-disabled="true"><svg viewBox="0 0 24 24"><path d="M4 4h10l6 6v10H4zM13 5v6h6"/></svg>arXiv <small>soon</small></a>
         <a class="btn soon" href="#" aria-disabled="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6zM14 3v5h5M8 13h8v2H8zm0 4h8v2H8z"/></svg>PDF <small>soon</small></a>
-        <a class="btn" href="https://github.com/zuo-kuangji/delta-flow" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>GitHub</a>
+        <a class="btn" href="https://github.com/NTUMARS/delta-flow-matching" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>GitHub</a>
         <a class="btn ghost" href="#bibtex"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-7-4-7 4z"/></svg>BibTeX</a>
       </div>
     </div>
 
     <figure class="fig teaser">
-      <img src="static/images/teaser.jpg" alt="Overview: conventional flow matching starts vision and action generation from Gaussian noise and needs 10 or more steps; Δ-flow starts from history plus noise and needs one step. Panels show 3–5× faster convergence, 1.53–6.58× lower latency, and 48–67% smoother actions on ImageWAM, Fast-WAM and π0.5." width="2043" height="881">
+      <img src="static/images/teaser.jpg?v=20261010-3" alt="Overview: conventional flow matching starts vision and action generation from Gaussian noise and needs 10 or more steps; Δ-flow starts from history plus noise and needs one step. Panels show 3–6× faster convergence, 1.54–4.45× lower latency, and 48–67% smoother actions on ImageWAM, Fast-WAM and π0.5." width="2335" height="1009">
       <figcaption><b>Overview.</b> Δ-flow starts each source from recent history plus mild noise and learns only the change Δ.</figcaption>
     </figure>
 
     <div class="stats" role="list">
-      <div class="stat" role="listitem"><span class="n">3–5<small>×</small></span><span class="l">faster training convergence</span></div>
-      <div class="stat" role="listitem"><span class="n">1<small>step</small></span><span class="l">inference, up to 6.58× faster</span></div>
-      <div class="stat" role="listitem"><span class="n">88.9<small>%</small></span><span class="l">on LIBERO-Plus</span></div>
-      <div class="stat" role="listitem"><span class="n">4.5<small>×</small></span><span class="l">lower action jerk</span></div>
+      <div class="stat" role="listitem"><span class="n">6<small>×</small></span><span class="l">fewer epochs to reach 90% on LIBERO</span></div>
+      <div class="stat" role="listitem"><span class="n">1<small>step</small></span><span class="l">inference, up to 4.45× faster</span></div>
+      <div class="stat" role="listitem"><span class="n">88.55<small>%</small></span><span class="l">on LIBERO-Plus, state of the art</span></div>
+      <div class="stat" role="listitem"><span class="n">4.5<small>×</small></span><span class="l">lower action jerk than 1-step Gaussian</span></div>
     </div>
   </div>
 </header>
@@ -365,11 +392,11 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       <p>Only the source changes. No new modules, no extra data.</p>
     </div>
     <figure class="fig">
-      <img src="static/images/method.jpg" alt="Δ-flow for world-action models (left) and for vision-language-action models (right)." width="2063" height="742" loading="lazy">
+      <img src="static/images/method.jpg?v=20261010-3" alt="Δ-flow for world-action models (left) and for vision-language-action models (right)." width="2377" height="854" loading="lazy">
       <figcaption><b>Architecture.</b> Left: world-action models learn vision Δ and action Δ. Right: VLAs learn action Δ. One Euler step at inference.</figcaption>
     </figure>
     <div class="grid g3">
-      <div class="box"><span class="k">WAM · image</span><h3>ImageWAM</h3><div class="chip"><span>Vision Δ</span><span>Action Δ</span></div><p>FLUX.2-klein-4B + action DiT</p></div>
+      <div class="box"><span class="k">WAM · image</span><h3>ImageWAM</h3><div class="chip"><span>Vision Δ</span><span>Action Δ</span></div><p>FLUX.2-klein-base-4B + action DiT</p></div>
       <div class="box"><span class="k">WAM · video</span><h3>Fast-WAM</h3><div class="chip"><span>Vision Δ</span><span>Action Δ</span></div><p>Wan2.2-TI2V-5B + action DiT</p></div>
       <div class="box"><span class="k">VLA</span><h3>π<sub>0.5</sub></h3><div class="chip"><span class="off">Vision cond.</span><span>Action Δ</span></div><p>PaliGemma + Gemma action expert</p></div>
     </div>
@@ -380,16 +407,16 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
   <div class="wrap">
     <div class="sec-head">
       <span class="eyebrow">Ingredient 1</span>
-      <h2>3–5× Faster Training</h2>
-      <p>Δ-flow passes 95% on LIBERO by epoch 2. Gaussian-source baselines need epochs 4–8.</p>
+      <h2>Up to 6× Faster Training</h2>
+      <p>On LIBERO, ImageWAM reaches 90% success in one epoch instead of six, and Fast-WAM reaches 95% in two epochs instead of eight.</p>
     </div>
     <figure class="fig">
-      <img src="static/images/training_efficiency.jpg" alt="Success rate versus training epoch on LIBERO and LIBERO-Plus for ImageWAM, Fast-WAM and π0.5." width="1654" height="727" loading="lazy">
-      <figcaption><b>Training efficiency.</b> Top: LIBERO. Bottom: LIBERO-Plus. Labels show Δ-flow's gain at epochs 1–2.</figcaption>
+      <img src="static/images/training_efficiency.jpg?v=20261010-3" alt="Success rate versus training epoch on LIBERO and LIBERO-Plus for ImageWAM, Fast-WAM and π0.5." width="2382" height="1023" loading="lazy">
+      <figcaption><b>Training progress.</b> Top: LIBERO. Bottom: LIBERO-Plus, without extra fine-tuning. Labels give Δ-flow's gain in percentage points; stars mark the best checkpoint.</figcaption>
     </figure>
     <figure class="fig">
-      <img src="static/images/pi05_lora.jpg" alt="π0.5 LoRA: one-step Δ-flow reaches 92.2% after one epoch versus 89.5% for the ten-step baseline after five." width="1466" height="526" loading="lazy">
-      <figcaption><b>π<sub>0.5</sub> with LoRA.</b> 1-step Δ-flow after 1 epoch (92.2%) beats the 10-step baseline after 5 (89.5%).</figcaption>
+      <img src="static/images/pi05_lora.jpg?v=20261010-3" alt="π0.5 with LoRA: one-step Δ-flow reaches 92.20% after one epoch, above the ten-step baseline's 91.30% after five." width="1946" height="695" loading="lazy">
+      <figcaption><b>π<sub>0.5</sub> with LoRA.</b> One-step Δ-flow after one epoch (92.20%) already beats the ten-step baseline after five epochs (91.30%).</figcaption>
     </figure>
   </div>
 </section>
@@ -399,27 +426,54 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
     <div class="sec-head">
       <span class="eyebrow">Ingredient 2</span>
       <h2>Stronger Generalization</h2>
-      <p>Tested on LIBERO-Plus (7 perturbation types) with no extra tuning. ImageWAM: <b>83.26% → 88.90%</b>. Biggest gains: robot initialization (50.4 → 73.2) and object layout (79.9 → 87.7).</p>
+      <p>Tested on LIBERO-Plus (7 perturbation types) without extra fine-tuning. ImageWAM rises from 82.49% to <b>88.55%</b>, state of the art without embodied-data pretraining; the biggest gains are robot initialization (52.90 → 73.94) and object layout (81.31 → 88.39). π<sub>0.5</sub> rises from 80.70% to <b>84.53%</b>.</p>
     </div>
     <figure class="fig">
+      <span class="k">(a) LIBERO</span>
       <div class="tbl">
-        <table>
-          <thead><tr><th>Backbone</th><th>Method</th><th>Steps (V/A)</th><th>Spatial</th><th>Object</th><th>Goal</th><th>Long</th><th>Overall</th></tr></thead>
+        <table class="res res-libero">
+          <thead><tr><th>Model</th><th>Emb.PT</th><th>Spatial</th><th>Object</th><th>Goal</th><th>Long</th><th>Overall</th></tr></thead>
           <tbody>
-            <tr class="grp"><td colspan="8">LIBERO</td></tr>
-            <tr><td>ImageWAM</td><td>Original</td><td>0/10</td><td>98.80</td><td>99.20</td><td><b>98.80</b></td><td><b>95.20</b></td><td><b>98.00</b></td></tr>
-            <tr class="ours"><td>ImageWAM</td><td>Δ-flow (ours)</td><td>1/1</td><td><b>99.20</b></td><td><b>99.60</b></td><td>98.40</td><td>94.00</td><td>97.80</td></tr>
-            <tr><td>Fast-WAM</td><td>Gaussian sparse-joint</td><td>1/1</td><td><b>98.40</b></td><td>99.40</td><td><b>98.60</b></td><td>93.40</td><td>97.45</td></tr>
-            <tr class="ours"><td>Fast-WAM</td><td>Δ-flow (ours)</td><td>1/1</td><td>98.00</td><td><b>100.00</b></td><td><b>98.60</b></td><td><b>95.40</b></td><td><b>98.00</b></td></tr>
-            <tr class="grp"><td colspan="8">LIBERO-Plus</td></tr>
-            <tr><td>ImageWAM</td><td>Original</td><td>0/10</td><td>86.49</td><td>88.29</td><td>76.11</td><td>82.14</td><td>83.26</td></tr>
-            <tr class="ours"><td>ImageWAM</td><td>Δ-flow (ours)</td><td>1/1</td><td><b>91.06</b></td><td><b>93.65</b></td><td><b>84.78</b></td><td><b>86.11</b></td><td><b>88.90</b></td></tr>
-            <tr><td>Fast-WAM</td><td>Gaussian sparse-joint</td><td>1/1</td><td>85.35</td><td>79.90</td><td><b>73.41</b></td><td>71.85</td><td>77.63</td></tr>
-            <tr class="ours"><td>Fast-WAM</td><td>Δ-flow (ours)</td><td>1/1</td><td><b>88.43</b></td><td><b>90.11</b></td><td>67.89</td><td><b>76.62</b></td><td><b>80.76</b></td></tr>
+            <tr class="grp"><td colspan="7">VLA</td></tr>
+            <tr><td>OpenVLA</td><td>✓</td><td>84.7</td><td>88.4</td><td>79.2</td><td>53.7</td><td>76.5</td></tr>
+            <tr><td>UniVLA</td><td>✓</td><td>96.5</td><td>96.8</td><td>95.6</td><td>92.0</td><td>95.2</td></tr>
+            <tr><td>π<sub>0.5</sub></td><td>✓</td><td>98.80</td><td>96.80</td><td>98.80</td><td>94.00</td><td>97.10</td></tr>
+            <tr class="ours"><td>π<sub>0.5</sub> (Δ-flow)</td><td>✓</td><td><b>99.60</b></td><td><b>100.00</b></td><td><b>99.60</b></td><td><b>96.80</b></td><td><b>99.00</b></td></tr>
+            <tr class="grp"><td colspan="7">WAM</td></tr>
+            <tr><td>LingBot-VA</td><td>✓</td><td>98.5</td><td>99.6</td><td>97.2</td><td><b>98.5</b></td><td>98.5</td></tr>
+            <tr><td>Motus</td><td>✓</td><td>96.8</td><td>99.8</td><td>96.6</td><td>97.6</td><td>97.7</td></tr>
+            <tr><td>ABot-M0.5</td><td>✓</td><td><b>100.0</b></td><td>99.8</td><td><b>99.4</b></td><td>98.4</td><td><b>99.4</b></td></tr>
+            <tr><td>Cosmos Policy</td><td>×</td><td>98.1</td><td><b>100.0</b></td><td>98.2</td><td>97.6</td><td>98.5</td></tr>
+            <tr><td>ImageWAM</td><td>×</td><td>98.80</td><td>99.20</td><td>98.80</td><td>95.20</td><td>98.00</td></tr>
+            <tr class="ours"><td>ImageWAM (Δ-flow)</td><td>×</td><td>99.20</td><td>99.60</td><td>98.40</td><td>94.00</td><td>97.80</td></tr>
+            <tr><td>Fast-WAM</td><td>×</td><td>98.2</td><td><b>100.0</b></td><td>97.0</td><td>95.2</td><td>97.6</td></tr>
+            <tr class="ours"><td>Fast-WAM-joint (Δ-flow)</td><td>×</td><td>98.00</td><td><b>100.00</b></td><td>98.60</td><td>95.40</td><td>98.00</td></tr>
           </tbody>
         </table>
       </div>
-      <figcaption><b>Success rate (%).</b> Steps = visual / action updates per call.</figcaption>
+      <span class="k tbl-k2">(b) LIBERO-Plus</span>
+      <div class="tbl">
+        <table class="res res-plus">
+          <thead><tr><th>Model</th><th>Emb.PT</th><th>Camera</th><th>Robot</th><th>Language</th><th>Light</th><th>Background</th><th>Noise</th><th>Layout</th><th>Overall</th></tr></thead>
+          <tbody>
+            <tr class="grp"><td colspan="10">VLA</td></tr>
+            <tr><td>OpenVLA</td><td>✓</td><td>0.8</td><td>3.5</td><td>23.0</td><td>8.1</td><td>34.8</td><td>15.2</td><td>28.5</td><td>15.6</td></tr>
+            <tr><td>UniVLA</td><td>✓</td><td>1.8</td><td>46.2</td><td>69.6</td><td>69.0</td><td>81.0</td><td>21.2</td><td>31.9</td><td>42.9</td></tr>
+            <tr><td>π<sub>0.5</sub></td><td>✓</td><td>66.04</td><td>73.61</td><td>81.39</td><td><b>97.37</b></td><td>91.36</td><td>76.70</td><td>86.75</td><td>80.70</td></tr>
+            <tr class="ours"><td>π<sub>0.5</sub> (Δ-flow)</td><td>✓</td><td><b>73.36</b></td><td><b>79.35</b></td><td><b>83.80</b></td><td>96.94</td><td><b>97.30</b></td><td><b>81.26</b></td><td><b>87.34</b></td><td><b>84.53</b></td></tr>
+            <tr class="grp"><td colspan="10">WAM</td></tr>
+            <tr><td>LingBot-VA</td><td>✓</td><td>40.9</td><td>83.0</td><td>86.4</td><td>82.3</td><td>53.1</td><td>64.4</td><td>76.2</td><td>69.5</td></tr>
+            <tr><td>Motus</td><td>✓</td><td>48.0</td><td><b>88.0</b></td><td>89.0</td><td>83.0</td><td>78.0</td><td>57.0</td><td><b>89.0</b></td><td>76.0</td></tr>
+            <tr><td>ABot-M0.5</td><td>✓</td><td>70.5</td><td>87.4</td><td>88.6</td><td>94.0</td><td>89.7</td><td>75.5</td><td>85.2</td><td>83.4</td></tr>
+            <tr><td>Cosmos Policy</td><td>×</td><td>75.8</td><td>63.3</td><td>81.7</td><td>96.5</td><td>88.9</td><td>92.7</td><td>82.2</td><td>82.2</td></tr>
+            <tr><td>ImageWAM</td><td>×</td><td><b>82.55</b></td><td>52.90</td><td>86.99</td><td>97.37</td><td>90.24</td><td>92.07</td><td>81.31</td><td>82.49</td></tr>
+            <tr class="ours"><td>ImageWAM (Δ-flow)</td><td>×</td><td>82.24</td><td>73.94</td><td><b>93.62</b></td><td><b>98.69</b></td><td><b>93.77</b></td><td><b>93.57</b></td><td>88.39</td><td><b>88.55</b></td></tr>
+            <tr><td>Fast-WAM</td><td>×</td><td>16.4</td><td>44.5</td><td>68.9</td><td>78.2</td><td>53.7</td><td>37.7</td><td>60.7</td><td>51.5</td></tr>
+            <tr class="ours"><td>Fast-WAM-joint (Δ-flow)</td><td>×</td><td>70.04</td><td>78.77</td><td>85.43</td><td>91.77</td><td>68.12</td><td>88.38</td><td>80.79</td><td>80.58</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Success rate (%).</b> Emb.PT: extra embodied-data pretraining. Bold: best in each column within the VLA and WAM groups. Literature results keep their original protocols; our LIBERO-Plus Overall is weighted by the benchmark's perturbation-category proportions.</figcaption>
     </figure>
   </div>
 </section>
@@ -429,15 +483,15 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
     <div class="sec-head">
       <span class="eyebrow">Ingredient 3</span>
       <h2>One-Step, Smooth Inference</h2>
-      <p>One step on an A100. ImageWAM <b>248 → 115 ms</b>, Fast-WAM <b>873 → 133 ms</b> (6.58×).</p>
+      <p>Complete policy call on an A100. ImageWAM <b>296 → 119 ms</b> (2.49×), Fast-WAM <b>858 → 193 ms</b> (4.45×), π<sub>0.5</sub> <b>83 → 54 ms</b> (1.54×).</p>
     </div>
     <figure class="fig">
-      <img src="static/images/latency.jpg" alt="Latency and success rate for ImageWAM, Fast-WAM and π0.5." width="1613" height="518" loading="lazy">
-      <figcaption><b>Latency and success.</b> Bars: latency. Lines: LIBERO (dashed) and LIBERO-Plus (solid) success.</figcaption>
+      <img src="static/images/latency.jpg?v=20261010-3" alt="Latency and success rate for ImageWAM, Fast-WAM and π0.5." width="1936" height="618" loading="lazy">
+      <figcaption><b>Latency and success.</b> Bars: latency, including text encoding and visual source construction. Lines: LIBERO (dashed) and LIBERO-Plus (solid) success.</figcaption>
     </figure>
     <p class="body">One-step Gaussian sampling makes actions jerky (4.6×). Δ-flow stays smooth: each chunk starts from where the robot is.</p>
     <figure class="fig">
-      <img src="static/images/action_continuity.jpg" alt="Action change and jerk around chunk boundaries on ImageWAM." width="1466" height="565" loading="lazy">
+      <img src="static/images/action_continuity.jpg?v=20261010-3" alt="Action change and jerk around chunk boundaries on ImageWAM." width="1956" height="751" loading="lazy">
       <figcaption><b>Action smoothness.</b> Action change and jerk around chunk boundaries (ImageWAM, LIBERO-Long).</figcaption>
     </figure>
     <div class="box plate demo" id="chunk-demo">
@@ -478,32 +532,32 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       <div class="box swap-model"><span class="k">frozen policy</span><b>0 parameters updated</b></div>
     </div>
     <figure class="fig">
-      <div class="grid g4">
+      <div class="grid g3">
         <div class="box plate"><span class="k">ImageWAM · action</span><div class="tf-n"><span class="from">97.50</span><span class="ar">→</span><span class="to">98.10</span><small>%</small></div></div>
         <div class="box plate"><span class="k">Fast-WAM · action</span><div class="tf-n"><span class="from">95.55</span><span class="ar">→</span><span class="to">96.15</span><small>%</small></div></div>
         <div class="box plate"><span class="k">ImageWAM · visual</span><div class="tf-n"><span class="from">97.60</span><span class="ar">→</span><span class="to">98.30</span><small>%</small></div></div>
-        <div class="box plate"><span class="k">ImageWAM · latency</span><div class="tf-n"><span class="from">255.7</span><span class="ar">→</span><span class="to">63.1</span><small>ms</small></div></div>
       </div>
-      <figcaption><b>LIBERO success at 1 step.</b> Latency: 10-step Gaussian vs 1-step history. On LIBERO-Plus the change is small; full gains need training with Δ-flow.</figcaption>
+      <figcaption><b>LIBERO success at one step, frozen policy.</b> On LIBERO-Plus the change is small (ImageWAM 82.42 → 82.52, Fast-WAM 68.28 → 67.58); full gains need training with Δ-flow.</figcaption>
     </figure>
     <details class="more"><summary>Full table</summary>
     <div class="tbl">
-      <table>
-        <thead><tr><th>Backbone</th><th>Source</th><th>V/A</th><th>LIBERO</th><th>LIBERO-Plus</th><th>Latency (ms)</th></tr></thead>
-        <tbody>
-          <tr class="grp"><td colspan="6">Action source</td></tr>
-          <tr><td>ImageWAM</td><td>Gaussian</td><td>1/10</td><td>98.00</td><td><b>83.17</b></td><td>255.7</td></tr>
-          <tr><td>ImageWAM</td><td>Gaussian</td><td>1/1</td><td>97.50</td><td>82.42</td><td>63.6</td></tr>
-          <tr class="ours"><td>ImageWAM</td><td>Past action</td><td>1/1</td><td><b>98.10</b></td><td>82.52</td><td><b>63.1</b></td></tr>
-          <tr><td>Fast-WAM</td><td>Gaussian</td><td>10/10</td><td><b>96.60</b></td><td>67.83</td><td>355.2</td></tr>
-          <tr><td>Fast-WAM</td><td>Gaussian</td><td>1/1</td><td>95.55</td><td><b>68.28</b></td><td><b>90.3</b></td></tr>
-          <tr class="ours"><td>Fast-WAM</td><td>Past action</td><td>1/1</td><td>96.15</td><td>67.58</td><td>91.8</td></tr>
-          <tr class="grp"><td colspan="6">Visual source</td></tr>
-          <tr><td>ImageWAM</td><td>Gaussian</td><td>1/1</td><td>97.60</td><td>89.79</td><td>85.2</td></tr>
-          <tr class="ours"><td>ImageWAM</td><td>Past image</td><td>1/1</td><td><b>98.30</b></td><td><b>89.89</b></td><td><b>85.0</b></td></tr>
-        </tbody>
-      </table>
-    </div>
+        <table class="res res-tf">
+          <thead><tr><th>Policy</th><th>Source</th><th>V/A</th><th>LIBERO</th><th>LIBERO-Plus</th></tr></thead>
+          <tbody>
+            <tr class="grp"><td colspan="5">Action source</td></tr>
+            <tr><td>ImageWAM</td><td>Gaussian</td><td>0/10</td><td>98.00</td><td><b>83.17</b></td></tr>
+            <tr><td>ImageWAM</td><td>Gaussian</td><td>0/1</td><td>97.50</td><td>82.42</td></tr>
+            <tr class="ours"><td>ImageWAM</td><td>Past action</td><td>1/1</td><td><b>98.10</b></td><td>82.52</td></tr>
+            <tr><td>Fast-WAM</td><td>Gaussian</td><td>10/10</td><td><b>96.60</b></td><td>67.83</td></tr>
+            <tr><td>Fast-WAM</td><td>Gaussian</td><td>1/1</td><td>95.55</td><td><b>68.28</b></td></tr>
+            <tr class="ours"><td>Fast-WAM</td><td>Past action</td><td>1/1</td><td>96.15</td><td>67.58</td></tr>
+            <tr class="grp"><td colspan="5">Visual source</td></tr>
+            <tr><td>ImageWAM</td><td>Gaussian</td><td>0/1</td><td>97.60</td><td>89.79</td></tr>
+            <tr class="ours"><td>ImageWAM</td><td>Past image</td><td>1/1</td><td><b>98.30</b></td><td><b>89.89</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+    <p class="tbl-note">V/A counts visual / action solver updates; V = 0 keeps visual conditioning without visual denoising.</p>
     </details>
   </div>
 </section>
@@ -519,21 +573,21 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       <div class="box find">
         <h3>Both flows help</h3>
         <div class="bars" aria-label="LIBERO-Plus success on ImageWAM">
-          <div class="bar"><span>Original</span><i style="width:40.1%"></i><span>82.02</span></div>
-          <div class="bar on"><span>+ action Δ</span><i style="width:53.0%"></i><span>85.91</span></div>
-          <div class="bar on"><span>+ visual Δ</span><i style="width:60.5%"></i><span>88.15</span></div>
+          <div class="bar"><span>Original</span><i style="width:41.6%"></i><span>82.49</span></div>
+          <div class="bar on"><span>+ action Δ</span><i style="width:50.9%"></i><span>85.26</span></div>
+          <div class="bar on"><span>+ visual Δ</span><i style="width:61.8%"></i><span>88.55</span></div>
         </div>
-        <p>LIBERO-Plus, ImageWAM.</p>
+        <p>LIBERO-Plus (category-weighted), ImageWAM.</p>
       </div>
       <div class="box find">
         <h3>Endpoint loss matters under shift</h3>
         <div class="bars" aria-label="LIBERO-Plus with and without endpoint consistency">
           <div class="bar on"><span>Action Δ</span><i style="width:53.0%"></i><span>85.91</span></div>
           <div class="bar"><span>w/o action EC</span><i style="width:46.0%"></i><span>83.81</span></div>
-          <div class="bar on"><span>Action + visual Δ</span><i style="width:60.5%"></i><span>88.15</span></div>
-          <div class="bar"><span>w/o visual EC</span><i style="width:47.9%"></i><span>84.36</span></div>
+          <div class="bar on"><span>Action + visual Δ</span><i style="width:57.9%"></i><span>87.37</span></div>
+          <div class="bar"><span>w/o visual EC</span><i style="width:49.9%"></i><span>84.96</span></div>
         </div>
-        <p>LIBERO barely changes (≤ 0.3 pp).</p>
+        <p>Visual rows use the 80% image-latent prior. On LIBERO the changes are small (−0.1 and +0.9 pp).</p>
       </div>
     </div>
   </div>
@@ -546,36 +600,35 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       <h2>Design Lessons</h2>
       <p>What else matters when putting Δ-flow into a foundation model.</p>
     </div>
-    <div class="grid g2">
-      <div class="box find">
-        <h3>Predict fewer future frames</h3>
-        <span class="big">+5.19 <small>pp LIBERO-Plus</small></span>
-        <figure class="fig"><img src="static/images/fastwam_variants.jpg" alt="Fast-WAM variants on LIBERO and LIBERO-Plus." width="1460" height="520" loading="lazy"></figure>
-        <p>4 frames beat 8 over the same horizon (Fast-WAM).</p>
-      </div>
-      <div class="box find">
-        <h3>Stop action gradients into the world model</h3>
-        <span class="big">+4.56 <small>pp LIBERO-Plus</small></span>
-        <div class="bars" aria-label="Fast-WAM with and without stop-gradient">
-          <div class="bar"><span>LIBERO · shared</span><i style="width:93.8%"></i><span>98.15</span></div>
-          <div class="bar on"><span>LIBERO · stop-grad</span><i style="width:96.5%"></i><span>98.95</span></div>
-          <div class="bar"><span>Plus · shared</span><i style="width:27.0%"></i><span>78.09</span></div>
-          <div class="bar on"><span>Plus · stop-grad</span><i style="width:42.2%"></i><span>82.65</span></div>
+    <div class="lessons">
+      <article class="lesson">
+        <div class="lesson-head">
+          <div class="lesson-text"><span class="k">01 · Fast-WAM</span><h3>Predict fewer future frames</h3><p>Over the same 32-step horizon, predicting 4 future frames beats predicting 8.</p></div>
+          <div class="lesson-num"><span class="big">+5.19</span><small>pp LIBERO-Plus</small></div>
         </div>
-        <p>Share features, not gradients.</p>
-      </div>
-      <div class="box find">
-        <h3>Endpoint loss alone almost suffices</h3>
-        <span class="big">87.55 <small>vs 87.60</small></span>
-        <figure class="fig"><img src="static/images/action_objectives.jpg" alt="Action objectives in ImageWAM." width="1481" height="569" loading="lazy"></figure>
-        <p>Flow matching still speeds up early training.</p>
-      </div>
-      <div class="box find">
-        <h3>Use local delta actions</h3>
-        <span class="big">+27.2 <small>pp LIBERO-Plus</small></span>
-        <figure class="fig"><img src="static/images/action_representation.jpg" alt="Action representations on LIBERO and LIBERO-Plus." width="1480" height="557" loading="lazy"></figure>
-        <p>Same on LIBERO, very different under shift.</p>
-      </div>
+        <figure class="fig"><img src="static/images/fastwam_variants.jpg?v=20261010-3" alt="Fast-WAM variants on LIBERO and LIBERO-Plus." width="1946" height="690" loading="lazy"><figcaption><b>Fast-WAM variants.</b> All models are jointly trained on the four LIBERO suites.</figcaption></figure>
+      </article>
+      <article class="lesson">
+        <div class="lesson-head">
+          <div class="lesson-text"><span class="k">02 · ImageWAM</span><h3>Stop action gradients into the world model</h3><p>Blocking action-loss gradients sharpens future-frame prediction (PSNR 15.04 → 20.86 dB) and helps under shift. Share features, not gradients.</p></div>
+          <div class="lesson-num"><span class="big">+1.7</span><small>pp LIBERO-Plus</small></div>
+        </div>
+        <figure class="fig"><img src="static/images/visual_stopgrad.jpg?v=20261010-3" alt="ImageWAM with full gradient versus stop-gradient: LIBERO suites, future-frame PSNR, and LIBERO-Plus perturbations." width="1946" height="1139" loading="lazy"><figcaption><b>Action-gradient transfer.</b> Black numbers: stop-gradient success. Blue: difference from full gradient in percentage points. Right: future-frame PSNR.</figcaption></figure>
+      </article>
+      <article class="lesson">
+        <div class="lesson-head">
+          <div class="lesson-text"><span class="k">03 · ImageWAM</span><h3>Endpoint loss alone almost suffices</h3><p>Endpoint consistency alone nearly matches FM + EC; flow matching still speeds up early training (78.10 → 89.90 after one epoch).</p></div>
+          <div class="lesson-num"><span class="big">87.30</span><small>vs 87.37 LIBERO-Plus</small></div>
+        </div>
+        <figure class="fig"><img src="static/images/action_objectives.jpg?v=20261010-3" alt="Action objectives in ImageWAM: EC only versus FM plus EC." width="1967" height="759" loading="lazy"><figcaption><b>Action objectives.</b> Both models use the 80% image-latent prior. EC is L1 endpoint consistency.</figcaption></figure>
+      </article>
+      <article class="lesson">
+        <div class="lesson-head">
+          <div class="lesson-text"><span class="k">04 · ImageWAM</span><h3>Use local delta actions</h3><p>Local delta actions beat 7D absolute actions most clearly under distribution shift (85.26 vs 61.07).</p></div>
+          <div class="lesson-num"><span class="big">+24.2</span><small>pp LIBERO-Plus</small></div>
+        </div>
+        <figure class="fig"><img src="static/images/action_representation.jpg?v=20261010-3" alt="Action representations on LIBERO and LIBERO-Plus." width="1971" height="742" loading="lazy"><figcaption><b>Action representations.</b> Black numbers: local-delta success. Blue: local delta minus 7D absolute, in percentage points. LIBERO-Plus Overall is category-weighted.</figcaption></figure>
+      </article>
     </div>
   </div>
 </section>
@@ -604,7 +657,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
     </div>
     <div class="bib">
       <button class="btn copy" id="copy-bib" type="button">Copy</button>
-<pre id="bib-text">@article{zuo2026deltaflow,
+<pre id="bib-text">@article{deltaflow,
   title   = {$\Delta$ Flow Matching for Robot Foundation Models},
   author  = {Zuo, Kuangji and An, Tuo and Guo, Xinying and Li, Gen and
              Zhao, Mengfei and Bai, Jiaqi and Lyu, Bofan and Yu, Zhuoyuan and
@@ -617,7 +670,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
 </section>
 
 <footer>
-  <div class="wrap">MARS Lab · Nanyang Technological University · Δ-flow Matching for Robot Foundation Models · 2026</div>
+  <div class="wrap">MARS Lab · Nanyang Technological University · Δ&nbsp;Flow Matching for Robot Foundation Models · 2026</div>
 </footer>
 
 <script>
