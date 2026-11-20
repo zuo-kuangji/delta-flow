@@ -3,8 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Δ Flow Matching for Robot Foundation Models: start the flow from recent history with mild noise, learn only the residual change, and generate in one step.">
-<title>Δ Flow Matching</title>
+<meta name="description" content="Δ-flow learns the change from recent history for one-step action and visual generation in robot foundation models.">
+<title>Δ Flow Matching for Robot Foundation Models</title>
+<link rel="canonical" href="https://zuo-kuangji.github.io/delta-flow/">
+<meta name="citation_title" content="Δ Flow Matching for Robot Foundation Models">
+<meta name="citation_arxiv_id" content="2610.15794">
+<meta name="citation_pdf_url" content="https://arxiv.org/pdf/2610.15794">
 <link rel="icon" type="image/png" href="static/images/favicon.png?v=20261010-3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -99,8 +103,6 @@ section > .wrap::before,footer > .wrap::before{content:"";position:absolute;top:
 .btn:hover{background:var(--ink-2)}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
 .btn.ghost:hover{background:var(--plate)}
-.btn.soon{background:transparent;color:var(--faint);border-color:var(--line);cursor:default}
-.btn.soon small{font:var(--fs-xs)/1 var(--f-mono)}
 .hero .teaser{margin-top:56px}
 
 /* figures: trimmed images run edge to edge of the column */
@@ -299,7 +301,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
   <div class="wrap">
     <div class="hero-text">
       <h1><img src="static/images/logo.png?v=20261010-3" alt="Δ-flow" width="513" height="147"><span><span class="dmark"><img src="static/images/delta_mark.png?v=20261010-3" alt="" aria-hidden="true" width="173" height="147"><span class="sr">Δ</span></span>&nbsp;Flow Matching for Robot Foundation Models</span></h1>
-      <p class="tag">Learn the change from <em>history</em>, not from fixed Gaussian noise.</p>
+      <p class="tag">Learn the change from <em>recent history</em>.</p>
 
       <div class="authors">
         <a href="https://kuangjizuo.com/" target="_blank" rel="noopener">Kuangji Zuo<sup>*</sup></a>
@@ -319,8 +321,8 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       <div class="notes"><span>* Equal contribution</span><span>‡ Project lead</span><span>† Corresponding authors</span></div>
 
       <div class="btns">
-        <a class="btn soon" href="#" aria-disabled="true"><svg viewBox="0 0 24 24"><path d="M4 4h10l6 6v10H4zM13 5v6h6"/></svg>arXiv <small>soon</small></a>
-        <a class="btn soon" href="#" aria-disabled="true"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6zM14 3v5h5M8 13h8v2H8zm0 4h8v2H8z"/></svg>PDF <small>soon</small></a>
+        <a class="btn" href="https://arxiv.org/abs/2610.15794" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h10l6 6v10H4zM13 5v6h6"/></svg>arXiv</a>
+        <a class="btn" href="https://arxiv.org/pdf/2610.15794" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6zM14 3v5h5M8 13h8v2H8zm0 4h8v2H8z"/></svg>PDF</a>
         <a class="btn" href="https://github.com/NTUMARS/delta-flow-matching" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>GitHub</a>
         <a class="btn ghost" href="#bibtex"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-7-4-7 4z"/></svg>BibTeX</a>
       </div>
@@ -335,7 +337,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       <div class="stat" role="listitem"><span class="n">6<small>×</small></span><span class="l">fewer epochs for ImageWAM to reach 90% LIBERO success</span></div>
       <div class="stat" role="listitem"><span class="n">1<small>step</small></span><span class="l">inference, up to 4.45× faster than ten-step Gaussian</span></div>
       <div class="stat" role="listitem"><span class="n">88.55<small>%</small></span><span class="l">ImageWAM success on LIBERO-Plus</span></div>
-      <div class="stat" role="listitem"><span class="n">4.5<small>×</small></span><span class="l">lower ImageWAM action jerk than one-step Gaussian</span></div>
+      <div class="stat" role="listitem"><span class="n">4.5<small>×</small></span><span class="l">lower mean trajectory jerk on ImageWAM than one-step Gaussian</span></div>
     </div>
   </div>
 </header>
@@ -362,7 +364,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
     <div class="box plate demo" id="tau-demo">
       <div class="demo-head">
         <span class="k">Interactive · illustration</span>
-        <h3>Drag τ from noise (1) to action (0)</h3>
+        <h3>Drag τ from the source (1) to the target (0)</h3>
         <p>Illustrative trajectories. Grey: executed history. Dashed: the next action chunk.</p>
       </div>
       <div class="demo-panels">
@@ -390,11 +392,11 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
     <div class="sec-head">
       <span class="eyebrow">Method</span>
       <h2>One Recipe, Three Backbones</h2>
-      <p>History-based sources. Existing backbones. One-step prediction.</p>
+      <p>Δ-flow starts from recent observations and executed actions with Gaussian noise. Endpoint consistency supervises the prediction after one Euler update.</p>
     </div>
     <figure class="fig">
       <img src="static/images/method.jpg?v=20261010-3" alt="Δ-flow for world-action models (left) and for vision-language-action models (right)." width="2377" height="854" loading="lazy">
-      <figcaption><b>Architecture.</b> WAMs learn visual and action changes; VLAs learn action changes. One Euler update per branch.</figcaption>
+      <figcaption><b>Architecture.</b> Complete Δ-flow uses history-based sources for both branches of ImageWAM and Fast-WAM. On π<sub>0.5</sub>, it uses the action history to initialize the action branch.</figcaption>
     </figure>
     <div class="grid g3">
       <div class="box"><span class="k">WAM · image</span><h3>ImageWAM</h3><div class="chip"><span>Vision Δ</span><span>Action Δ</span></div><p>FLUX.2-klein-base-4B + action DiT</p></div>
@@ -409,7 +411,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
     <div class="sec-head">
       <span class="eyebrow">Training</span>
       <h2>Up to 6× Fewer Training Epochs</h2>
-      <p>ImageWAM reaches 90% LIBERO success in 1 epoch instead of 6; Fast-WAM reaches 95% in 2 instead of 8.</p>
+      <p>On LIBERO, ImageWAM reaches 90% in one epoch versus six for its Gaussian reference. Fast-WAM reaches 95% in two epochs versus eight for the Gaussian sparse-joint reference.</p>
     </div>
     <figure class="fig">
       <img src="static/images/training_efficiency.png?v=20261012" alt="Success rate versus training epoch on LIBERO and LIBERO-Plus for ImageWAM, Fast-WAM and π0.5." width="2055" height="900" loading="lazy">
@@ -427,7 +429,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
     <div class="sec-head">
       <span class="eyebrow">Generalization</span>
       <h2>Stronger Generalization</h2>
-      <p>ImageWAM reaches 88.55% on LIBERO-Plus, without extra embodied-data pretraining or additional fine-tuning.</p>
+      <p>ImageWAM with Δ-flow reaches 88.55% in zero-shot evaluation on LIBERO-Plus.</p>
     </div>
     <figure class="fig">
       <span class="k">(a) LIBERO</span>
@@ -447,7 +449,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
             <tr><td>Cosmos Policy</td><td>×</td><td>98.1</td><td><b>100.0</b></td><td>98.2</td><td>97.6</td><td>98.5</td></tr>
             <tr><td>ImageWAM</td><td>×</td><td>98.80</td><td>99.20</td><td>98.80</td><td>95.20</td><td>98.00</td></tr>
             <tr class="ours"><td>ImageWAM (Δ-flow)</td><td>×</td><td>99.20</td><td>99.60</td><td>98.40</td><td>94.00</td><td>97.80</td></tr>
-            <tr><td>Fast-WAM</td><td>×</td><td>—</td><td>—</td><td>—</td><td>—</td><td>96.60</td></tr>
+            <tr><td>Fast-WAM</td><td>×</td><td>97.60</td><td><b>100.00</b></td><td>95.80</td><td>93.00</td><td>96.60</td></tr>
             <tr><td>Fast-WAM-joint (Gaussian)</td><td>×</td><td>98.40</td><td>99.40</td><td>98.60</td><td>93.40</td><td>97.45</td></tr>
             <tr class="ours"><td>Fast-WAM-joint (Δ-flow)</td><td>×</td><td>98.00</td><td><b>100.00</b></td><td>98.60</td><td>95.40</td><td>98.00</td></tr>
           </tbody>
@@ -476,7 +478,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
           </tbody>
         </table>
       </div>
-      <figcaption><b>Success rate (%).</b> Emb.PT: extra embodied-data pretraining. Bold: best per model group. Fast-WAM-joint uses matched sparse, one-step settings. LIBERO-Plus Overall is category-weighted; literature protocols vary.</figcaption>
+      <figcaption><b>Success rates (%).</b> Emb.PT indicates additional embodied-data pretraining. The best scores in each model group are bold. The two Fast-WAM-joint variants use the same sparse architecture and one sampling step. <a href="https://arxiv.org/html/2610.15794#S5.T1">Paper Table 1</a></figcaption>
     </figure>
   </div>
 </section>
@@ -489,10 +491,10 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       <p>One-step generation is 1.54–4.45× faster than ten-step Gaussian sampling.</p>
     </div>
     <figure class="fig">
-      <img src="static/images/latency.png?v=20261011" alt="Latency and success rate for ImageWAM, Fast-WAM and π0.5." width="3897" height="1464" loading="lazy">
-      <figcaption><b>Latency and success.</b> Complete policy-call latency on A100-80GB. Dashed/solid lines: LIBERO/LIBERO-Plus. π<sub>0.5</sub> uses LoRA; Fast-WAM uses sparse-joint inference.</figcaption>
+      <img src="static/images/latency.png?v=20261120" alt="Latency and success rate for ImageWAM, Fast-WAM and π0.5." width="3897" height="1464" loading="lazy">
+      <figcaption><b>Latency and success.</b> Timings cover complete local policy calls on an A100-80GB. The π<sub>0.5</sub> timings use JAX LoRA. Dashed lines show LIBERO success, and solid lines show LIBERO-Plus success.</figcaption>
     </figure>
-    <p class="body">ImageWAM achieves 4.5× lower mean action jerk than one-step Gaussian sampling.</p>
+    <p class="body">Across 20 matched successful LIBERO-Long trajectories, ImageWAM's mean action jerk is 0.04335 with complete Δ-flow and 0.19399 with one-step Gaussian sampling, a 4.5× difference. <a href="https://arxiv.org/html/2610.15794#A2.T9">Trajectory results</a></p>
     <figure class="fig">
       <img src="static/images/action_continuity.png?v=20261012" alt="Action change and jerk around chunk boundaries on ImageWAM." width="1560" height="662" loading="lazy">
       <figcaption><b>Action smoothness.</b> ImageWAM on LIBERO-Long. Boundary peaks fall 48% for action change and 67% for jerk versus one-step Gaussian sampling. Bands: paired-bootstrap 95% CI.</figcaption>
@@ -605,7 +607,7 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       </article>
       <article class="lesson">
         <div class="lesson-head">
-          <div class="lesson-text"><span class="k">02 · ImageWAM</span><h3>Stop action gradients into the world model</h3><p>Stop-gradient improves future-frame PSNR (15.04 → 20.86 dB) and LIBERO-Plus success (83.24 → 84.96%), without visual EC.</p></div>
+          <div class="lesson-text"><span class="k">02 · ImageWAM</span><h3>Stop action gradients into the world model</h3><p>Detaching visual features before action prediction improves future-frame PSNR and overall LIBERO-Plus success.</p></div>
         </div>
         <figure class="fig"><img src="static/images/visual_stopgrad.png?v=20261012" alt="ImageWAM with full gradient versus stop-gradient: LIBERO suites, future-frame PSNR, and LIBERO-Plus perturbations." width="3897" height="2388" loading="lazy"><figcaption><b>Action-gradient transfer.</b> Black numbers: stop-gradient success. Blue: difference from full gradient in percentage points. Right: future-frame PSNR.</figcaption></figure>
       </article>
@@ -617,9 +619,9 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
       </article>
       <article class="lesson">
         <div class="lesson-head">
-          <div class="lesson-text"><span class="k">04 · ImageWAM</span><h3>Use local delta actions</h3><p>Local-delta actions generalize better overall: 85.82% versus 61.07% for 7D absolute actions on LIBERO-Plus.</p></div>
+          <div class="lesson-text"><span class="k">04 · ImageWAM</span><h3>Action representation shapes generalization</h3><p>On LIBERO-Plus, absolute actions score 61.07% with axis-angle and 71.67% with rotation-6D. Local-delta actions reach 85.82% overall.</p></div>
         </div>
-        <figure class="fig"><img src="static/images/action_representation.png?v=20261011" alt="Action representations on LIBERO and LIBERO-Plus." width="3897" height="1570" loading="lazy"><figcaption><b>Action representations.</b> Black: local-delta success. Blue: gain over 7D absolute actions. LIBERO-Plus Overall is category-weighted.</figcaption></figure>
+        <figure class="fig"><img src="static/images/action_representation.png?v=20261011" alt="Action representations on LIBERO and LIBERO-Plus." width="3897" height="1570" loading="lazy"><figcaption><b>Action representations.</b> Black numbers show local-delta success. Blue annotations give the difference from 7D absolute actions in percentage points.</figcaption></figure>
       </article>
     </div>
   </div>
@@ -646,17 +648,18 @@ footer > .wrap{position:relative;padding-block:32px;text-align:center;font:var(-
     <div class="sec-head">
       <span class="eyebrow">Citation</span>
       <h2>BibTeX</h2>
-      <p>Preprint details are pending. The citation will be updated when the paper is released.</p>
+      <p><a href="https://arxiv.org/abs/2610.15794">arXiv:2610.15794</a></p>
     </div>
     <div class="bib">
       <button class="btn copy" id="copy-bib" type="button">Copy</button>
-<pre id="bib-text">@article{deltaflow,
+<pre id="bib-text">@article{zuo2026deltaflow,
   title   = {$\Delta$ Flow Matching for Robot Foundation Models},
   author  = {Zuo, Kuangji and An, Tuo and Guo, Xinying and Li, Gen and
              Zhao, Mengfei and Bai, Jiaqi and Lyu, Bofan and Yu, Zhuoyuan and
              Yang, Jinghan and Li, Jiayi and Jia, Jindou and Yang, Jianfei},
-  journal = {arXiv preprint},
-  year    = {2026}
+  journal = {arXiv preprint arXiv:2610.15794},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2610.15794}
 }</pre>
     </div>
   </div>
@@ -672,7 +675,6 @@ while(w.nextNode())ns.push(w.currentNode);
 ns.forEach(function(n){var f=document.createDocumentFragment();n.nodeValue.split(/(Δ-flow)/).forEach(function(t){if(t==='Δ-flow'){var s=document.createElement('span');s.className='nw';s.textContent=t;f.appendChild(s);}else if(t)f.appendChild(document.createTextNode(t));});n.parentNode.replaceChild(f,n);});})();
 </script>
 <script>
-document.querySelectorAll('.btn.soon').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); }); });
 document.getElementById('copy-bib').addEventListener('click', function(){
   var btn=this, txt=document.getElementById('bib-text').textContent;
   function done(){ btn.textContent='Copied'; setTimeout(function(){btn.textContent='Copy';},1600); }
