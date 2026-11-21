@@ -715,7 +715,7 @@ document.getElementById('copy-bib').addEventListener('click', function(){
       gaussian={
         source: noise.map(value=>0.50+0.13*value),
         // A schematic one-step error with a boundary offset and per-step variation.
-        output: target.map((value, i)=>value+0.11*Math.exp(-i/5)+0.032*noise[i]),
+        output: target.map((value, i)=>value+0.06*Math.exp(-i/5)+0.016*noise[i]),
       };
       delta={
         source: history.map((value, i)=>value+0.024*noise[i]),
@@ -770,11 +770,10 @@ document.getElementById('copy-bib').addEventListener('click', function(){
 
       // Trace the straight segment of the illustrative Euler update at fixed action indices.
       const actions=trajectory.source.map((value, i)=>tau*value+(1-tau)*trajectory.output[i]);
-      if(tau===0){
-        stroke([last,...actions],-1,color,2.1);
-      }else{
-        stroke(actions,0,color,2.1);
-      }
+      const atOutput=tau===0;
+      c.globalAlpha=trajectory===gaussian?(1-tau)**2:1;
+      stroke(atOutput?[last,...actions]:actions,atOutput?-1:0,color,2.1);
+      c.globalAlpha=1;
       c.fillStyle=color;
       actions.forEach((value, i)=>{
         c.beginPath();
