@@ -719,7 +719,8 @@ document.getElementById('copy-bib').addEventListener('click', function(){
       };
       delta={
         source: history.map((value, i)=>value+0.024*noise[i]),
-        output: target.map((value, i)=>value+0.006*noise[i]),
+        // A smooth residual starts at zero at the last executed action.
+        output: target.map((value, i)=>value+0.004*noise[0]*((i+1)/horizon)**2),
       };
       const actions=[...gaussian.source,...delta.source,...gaussian.output,...delta.output];
       lower=Math.min(0, ...actions);
